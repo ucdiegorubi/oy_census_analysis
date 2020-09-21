@@ -1,0 +1,25 @@
+{
+    "id": "9ADBBAC7",
+    "path": "/projects/diegocampos/oy_census/setup.R",
+    "project_path": "setup.R",
+    "type": "r_source",
+    "hash": "3532695693",
+    "contents": "",
+    "dirty": false,
+    "created": 1599851525366.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "cursorPosition": "2,25",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1599851792,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1599851792172,
+    "read_only": false,
+    "read_only_alternatives": []
+}

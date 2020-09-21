@@ -1,0 +1,12 @@
+library(pacman)
+
+p_load(
+  tidyverse, 
+  tidycensus
+)
+
+# load data ---------------------------------------------------------------
+
+
+
+

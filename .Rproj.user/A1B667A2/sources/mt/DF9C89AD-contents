@@ -1,0 +1,11 @@
+load_data <- 
+  list(
+    load_pums_data = function(){
+      
+      file <- 
+        tidycensus::get_pums(
+          
+        )
+      
+    }
+  )

@@ -1,0 +1,81 @@
+# script to download PUMS data with variables of interest
+
+config_path <- function(file_name){
+  
+  yaml::read_yaml(
+    here::here(
+      'configuration_files', 
+      file_name
+    )
+  )
+  
+  
+}
+
+functions_path <- function(file_name){
+  
+  source(
+    here::here(
+      'functions', 
+      file_name
+    )
+  )
+  
+}
+
+get_api_key <- function(){
+  
+  config <- config_path('census_api_key.yaml')
+  
+  api_key = config$census_api_key
+  
+  return(api_key)
+}
+
+load_api_key <- function(){
+  
+  api_key <- get_api_key()
+  
+  tidycensus::census_api_key(
+    key = api_key
+  )
+  
+}
+
+get_pums_variables <- function(){
+  
+  config <- 
+    config_path('pums_variables.yaml')
+  
+  return(config$PUMS_variables)
+  
+}
+
+
+# get data
+load_api_key()
+
+if(
+  file.exists(here::here('raw_data', 
+               'il_pums_data.csv')) == TRUE){
+  
+  pums_df <- load_data$load_pums_data()
+
+}else{
+  
+  load_api_key()
+  
+  pums_df <- load_data$download_pums_data()
+  
+  write_csv(
+    x = file, 
+    path = 
+      here::here('raw_data', 
+                 'il_pums_data.csv')
+  )
+}
+  
+
+
+
+

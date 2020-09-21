@@ -1,0 +1,48 @@
+PUMS_variables: [
+  # PUMA geograpphic Area
+  PUMA, 
+  # work related
+  NWAB, 
+  NWAV, 
+  NWLA, 
+  NWLK, 
+  NWRE, 
+  WKHP, 
+  WKL, 
+  WKW, 
+  WRK, 
+  
+  # time of arrival at work
+  JWAP, 
+  # time of departure for work
+  JWDP, 
+  
+  # employment status of parents 
+  ESP,
+  # whether or not enrolled in school
+  SCH, 
+  # educational attainment
+  SCHL, 
+  # grade level attending
+  SCHG,
+  
+  # sex / gender 
+  SEX, 
+  # wage / salary last 12 months
+  WAGP, 
+  
+
+  # Disasbility flag
+  DIS, 
+  # age
+  AGEP, 
+  # race
+  RAC1P, 
+  
+  # total person earnings
+  PERNP, 
+  # total person income (not sure the distinction)
+  PINCP,
+  #income to poverty ratio
+  POVPIP
+]

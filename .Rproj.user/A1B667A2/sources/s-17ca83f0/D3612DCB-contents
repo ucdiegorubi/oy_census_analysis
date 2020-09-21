@@ -1,0 +1,17 @@
+PUMS_variables: [
+  PUMA, 
+  NWAB, 
+  NWAV, 
+  NWLA, 
+  NWLK, 
+  NWRE, 
+  SCH, 
+  SCHL, 
+  SEX, 
+  WAGP, 
+  WKHP, 
+  WKL, 
+  WKW, 
+  WRK, 
+  DIS
+]

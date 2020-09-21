@@ -1,0 +1,24 @@
+load_data <- 
+
+  list(
+    
+    load_pums_data = function(){
+      
+      tidycensus::census_api_key(
+        config$census_api_key
+      )
+      
+      file <- 
+        tidycensus::get_pums(
+          
+          variables = c(config$pums_variables), 
+          state = "IL", 
+          recode = TRUE, 
+          year = 2018, 
+          survey = 'acs1'
+          
+        )
+      
+    }
+  )
+c
