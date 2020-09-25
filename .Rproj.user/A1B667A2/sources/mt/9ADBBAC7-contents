@@ -1,3 +1,0 @@
-install.packages('tidyverse')
-install.packages('tidycensus')
-install.packages('srvyr')

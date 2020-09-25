@@ -28,7 +28,7 @@ identify_opportunity_youth <- function(pums_data){
         youth_flag = 
           if_else(
             # establishing the age range
-            condition = AGEP <= 25 & AGEP >= 16, 
+            condition = AGEP <= 24 & AGEP >= 16, 
             true = TRUE,
             false = FALSE
             
@@ -60,28 +60,51 @@ identify_opportunity_youth <- function(pums_data){
           
           if_else(
             
-            # 2 = last worked over 1 - 5 years ago
-            (WKL == "2" |
-               
-               # Available for work
-               # 3 = No, other reasons
-               # 2 = No, temporarily ill
-               # 4 = No, unspecified 
-               NWAV %in% c("3", "2", "4")), 
+            # # 2 = last worked over 1 - 5 years ago
+            # WKL == "2" |
+            #   
+            #   # Available for work
+            #   # 3 = No, other reasons
+            #   # 2 = No, temporarily ill
+            #   # 4 = No, unspecified 
+            #   NWAV %in% c("3", "2", "4")|
+            #   
+            #   # looking for work
+            #   # 2 = No
+            #   NWLK == "2" |
+            #   
+            #   # Worked last week
+            #   # 2 = did not work
+            #   WRK == "2"| 
+            #   
+            #   # Temporary Work Abscense
+            #   # 2 == No
+            #   NWAB == "2" | 
+            #   
+            #   # on layoff
+            #   # 2 == No
+            #   NWLA == "2",
+              
+              
+            # employment status
+            # 3 == unemployed
+            ESR %in% c( "3", "6"),
+              
+            
             true = TRUE , 
             false = FALSE
             
           ), 
         employment_label = 
           if_else(
-            employment_flag == TRUE, 
-            'Unemployed', 
-            'Not Unemployed'
+                employment_flag == TRUE, 
+                'Unemployed', 
+                'Not Unemployed'
+              )
           )
-        )
-    
-    return(pums_data)
-    
+        
+        return(pums_data)
+        
   }
   
   school_enrollment_flag <- function(){
@@ -130,34 +153,54 @@ identify_opportunity_youth <- function(pums_data){
     pums_data %>% 
     
     mutate(
+      
+      disconnection_flag =
+        
+        if_else(
+          
+          # Individual is both unemployed and not enrolled in school 
+          employment_flag == TRUE & school_flag == TRUE, 
+          true = TRUE, 
+          false = FALSE
+        ), 
+      
+      
+      
       oy_flag = 
         if_else(
-          # young and simultaneously unemployed and not enrolled in school
-          (youth_flag == TRUE & employment_flag == TRUE & school_flag == TRUE), 
-          "opp_youth", 
           
-          # young but not unemployed or not in school
+          youth_flag == TRUE & disconnection_flag == TRUE , 
+          'opp_youth', 
+          
           if_else(
-            (youth_flag == TRUE & (employment_flag == FALSE | school_flag == FALSE)), 
-            
-            "non_oy_youth", 
-            
-            
-            "everyone_else"
+            (youth_flag == TRUE & disconnection_flag == FALSE), 
+            'connected_youth', 
+            'everyone_else'
           )
+          # # young and simultaneously unemployed and not enrolled in school
+          # (youth_flag == TRUE & employment_flag == TRUE & school_flag == TRUE), 
+          # "opp_youth", 
+          # 
+          # # young but not unemployed or not in school
+          # if_else(
+          #   (youth_flag == TRUE & (employment_flag == FALSE | school_flag == FALSE)) |
+          #     (youth_flag == TRUE), 
+          #   
+          #   "non_oy_youth", 
+          #   
+          #   
+          #   "everyone_else"
+          
         )
+      
+      
         
     )
   
+  return(pums_data)
   
   
 }
-
-
-# test <- identify_opportunity_youth(pums_data = pums_df)
-
-
-
 
 
 

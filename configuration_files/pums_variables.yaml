@@ -12,6 +12,9 @@ PUMS_variables: [
   WKW, 
   WRK, 
   
+  ## Employment status
+  ESR,
+  
   # time of arrival at work
   JWAP, 
   # time of departure for work
@@ -38,6 +41,9 @@ PUMS_variables: [
   AGEP, 
   # race
   RAC1P, 
+  
+  # Hispanic 
+  HISP,
   
   # total person earnings
   PERNP, 

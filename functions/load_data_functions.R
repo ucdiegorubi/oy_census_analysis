@@ -36,6 +36,31 @@ load_data <-
       
       file = 
         readr::read_csv(file_path)
+    }, 
+    
+    load_clean_pums = function(){
+      
+      file_path = 
+        here::here(
+          'clean_data', 
+          'il_pums_data_clean.csv'
+        )
+      
+      file = 
+        readr::read_csv(file_path)
+    }, 
+    
+    load_population_estimates = function(){
+      
+      file_path = 
+        here::here(
+          'analysis_data', 
+          'oy_population_estimates.RDS'
+        )
+      
+      file = 
+        readr::read_rds(file_path)
+      
     }
     
   )

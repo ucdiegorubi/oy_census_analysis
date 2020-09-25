@@ -11,13 +11,4 @@ convert_to_survey <- function(pums_data){
   
 }
 
-# pums_survey <- 
-#   convert_to_survey(pums_data = pums_df)
-# 
-# 
-# 
-# library(srvyr)
-# 
-# 
-# pums_survey %>% 
-#   survey_count(PUMA, oy_flag)
+

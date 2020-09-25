@@ -23,28 +23,48 @@ add_other_indicators <- function(pums_data){
     
     age_variable <- 
       cut(age_variable, 
-          breaks = c(0, 16, 19, 22, 25, 100), 
-          labels = c("0-16", 
-                     "16-19", 
-                     "20-22", 
-                     "23-25", 
-                     "25+"), 
-          include.lowest = TRUE)
+          breaks = c(0, 15, 19, 24, 50, 100), 
+          labels = c("0-15",
+                     "16-19",
+                     "20-24",
+                     "25-50",
+                     "50+"),
+          include.lowest = TRUE, 
+          # dig.lab = TRUE, 
+          ordered = TRUE, 
+          right = TRUE)
     
     return(age_variable)
     
   }
   
+  alt_age_brackets <- function(age_variable){
+    
+    age_variable <- 
+      cut(age_variable, 
+          breaks = c(0, 15, 24, 50, 100), 
+          labels = c("0-15",
+                     "16-24",
+                     "25-50",
+                     "50+"),
+          include.lowest = TRUE, 
+          # right = TRUE,
+          ordered_result = TRUE, 
+          right = TRUE)
+    
+    return(age_variable)
+  }
+  
   
   pums_data <- 
     pums_data %>% 
-    mutate(age_brackets = create_age_brackets(AGEP))
+    mutate(age_bracket = create_age_brackets(AGEP), 
+           alt_age_bracket = alt_age_brackets(AGEP))
   
   return(pums_data)
   
   
 }
-
 
 
 # LOAD DATA ---------------------------------------------------------------
@@ -60,15 +80,23 @@ pums_df <-
   identify_chicago_pumas(pums_data = pums_df)
 
 pums_df <- 
+  recategorize_race(pums_data = pums_df)
+
+pums_df <- 
   add_other_indicators(pums_data = pums_df)
 
 
+# WRITE DATA --------------------------------------------------------------
 
+helper_functions$check_for_directory('clean_data')
 
-  
+readr::write_csv(
+  x = pums_df, 
+  path = 
+    here::here(
+      'clean_data', 
+      'il_pums_data_clean.csv'
+    )
+)
 
-
-
-
-
-
+         

@@ -10,7 +10,7 @@ identify_chicago_pumas <- function(pums_data){
       
       puma_crosswalk %>% 
       filter(`State Name` == "Illinois", 
-             str_detect(`MSA Title`, "Chicago")) %>% 
+             str_detect(`PUMA Name`, "Chicago City")) %>% 
       pull(`PUMA Code`)
     
     return(puma_crosswalk)

@@ -1,4 +1,0 @@
-yaml::read_yaml(
-  here::here('configuration_files', 
-             'census_api_key.yaml')
-)

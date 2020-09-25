@@ -11,26 +11,36 @@ source(
 
 
 
-create_estimate <- function(...){
+create_estimate <- function(pums_survey, ...){
   
   pums_survey %>% 
     group_by(...) %>% 
     summarize(
-      n = survey_total(vartype = c('se','ci'))
+      n = survey_total(vartype = c('ci', 'se')), 
+      percent = survey_mean(vartype = c('ci', 'se'))
     )
   
 }
 
 # RUN ---------------------------------------------------------------
 pums_df <- 
-  load_data$load_pums_data()
-  
+  load_data$load_clean_pums()
 
-# TEST --------------------------------------------------------------------
+# TEMP --------------------------------------------------------------------
 
 pums_df <- 
   pums_df %>% 
-  mutate(oy_flag = factor(oy_flag))
+  mutate(
+    across(
+      .cols = c(SEX_label, 
+                DIS_label, 
+                RAC1P_label, 
+                oy_flag, 
+                age_bracket,
+                alt_age_bracket,
+                race_ethnicity, 
+                race_alternate), 
+      factor))
 
 pums_survey <- 
   convert_to_survey(pums_data = pums_df) %>% 
@@ -39,23 +49,67 @@ pums_survey <-
 
 
 
-# Total Opportunity Youth Population by PUMA
+
+# CREATE DATA -------------------------------------------------------------
 
 analysis_data <- 
   list(
+    
+    total_population_age_bracket = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., age_bracket),
+    
+    total_oy_population = 
+      pums_survey %>% 
+      filter(oy_flag != "everyone_else") %>% 
+      create_estimate(pums_survey = ., oy_flag),
+    
     puma_oy_population = 
-      create_estimate(PUMA, oy_flag), 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., PUMA, oy_flag),
     
-    disab_population = 
-      create_estimate(DIS_label, oy_flag), 
+    oy_disability = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., oy_flag, DIS_label), 
     
-    race_population = 
-      create_estimate(RAC1P_label, oy_flag)
-      
+    oy_sex = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., oy_flag, SEX_label), 
+  
+    
+    oy_race = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., oy_flag, race_ethnicity), 
+    
+    oy_race_alternate = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., oy_flag, race_alternate),
+    
+    oy_age_brackets = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., oy_flag, age_bracket), 
+    
+    oy_alt_age_bracket = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., oy_flag, alt_age_bracket),
+    
+    oy_race_gender = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., oy_flag, race_ethnicity, SEX_label)
+    
   )
 
 
+# WRITE DATA --------------------------------------------------------------
 
+helper_functions$check_for_directory('analysis_data')
+
+readr::write_rds(x = analysis_data, 
+                 path = 
+                   here::here(
+                     'analysis_data', 
+                     'oy_population_estimates.RDS'
+                   ))
 
 
 
