@@ -77,33 +77,33 @@ process_map_data <- function(data, names, values){
 #                    by_df = "PUMA")
 # 
 # 
-analysis_data$geo_puma_pop %>%
-  # filter(CHI_PUMA) %>%
-  ggplot() +
-  geom_sf(aes(fill = `Opportunity Youth`)) +
-  theme_classic() +
-  scale_fill_gradient(low = "#fff7bc",
-                      high = "#D5802B",
-                      na.value = "white") +
-  geom_sf_text(label = join_test %>% filter(CHI_PUMA) %>% pull(`Opportunity Youth`),
-               size = 2) +
-  theme(
-    axis.title = element_blank(),
-    axis.line = element_blank(),
-    axis.ticks = element_blank(),
-    axis.text = element_blank()
-  )
-
-
-analysis_data$geo_puma_pop %>% 
-  
-  ggplot() + 
-  geom_sf(aes(fill = `opp_youth`)) + 
-  theme_classic() + 
-  scale_fill_gradient(low = "#fff7bc",
-                      high = "#D5802B",
-                      na.value = "white")
-  
+# analysis_data$geo_puma_pop %>%
+#   # filter(CHI_PUMA) %>%
+#   ggplot() +
+#   geom_sf(aes(fill = `Opportunity Youth`)) +
+#   theme_classic() +
+#   scale_fill_gradient(low = "#fff7bc",
+#                       high = "#D5802B",
+#                       na.value = "white") +
+#   geom_sf_text(label = join_test %>% filter(CHI_PUMA) %>% pull(`Opportunity Youth`),
+#                size = 2) +
+#   theme(
+#     axis.title = element_blank(),
+#     axis.line = element_blank(),
+#     axis.ticks = element_blank(),
+#     axis.text = element_blank()
+#   )
+# 
+# 
+# analysis_data$geo_puma_pop %>% 
+#   
+#   ggplot() + 
+#   geom_sf(aes(fill = `opp_youth`)) + 
+#   theme_classic() + 
+#   scale_fill_gradient(low = "#fff7bc",
+#                       high = "#D5802B",
+#                       na.value = "white")
+#   
 
   
 

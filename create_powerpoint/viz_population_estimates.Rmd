@@ -41,7 +41,8 @@ analysis_data <-
   imap(
     .x = analysis_data, 
     .f = ~ 
-      if(.y == "total_population_age_bracket"){
+      if(.y %in% c("total_population_age_bracket", 
+                   'geo_puma_pop')){
         .x 
       }else{
         .x %>% 
@@ -414,46 +415,91 @@ analysis_data$oy_age_bracket %>%
 analysis_data$oy_race_gender %>% 
   ggplot(aes(x = oy_flag, 
              y = percent)) + 
-  geom_col(aes(fill = race_ethnicity)) + 
-  facet_wrap(~ SEX_label, 
-             ncol = 1) + 
+  geom_col(aes(fill = SEX_label)) + 
+  facet_wrap(~race_ethnicity, 
+             scales = 'free_y') + 
+  scale_y_continuous(labels = scales::percent) + 
+  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
+                group = SEX_label), 
+            position = position_stack(vjust = .5), 
+            size = 3) + 
   theme_classic() + 
-  theme(
-    strip.background = element_blank(), 
-    strip.text = element_text(face = 'bold'), 
-    legend.position = 'bottom'
-  ) + 
-  labs(
-     x= figure_helpers$x_axis, 
-     y = figure_helpers$y_percent, 
-     fill = "Sex") + 
-  scale_y_continuous(labels = scales::percent)
+  theme( strip.background = element_blank(), 
+         # strip.text.x = element_text(face = 'bold'), 
+         axis.title.x = element_blank()) + 
+  scale_x_discrete(labels = function(x) str_wrap(x, 10)) + 
+  labs(fill = "Gender")
   
 
 
 
 ```
+```{r}
+
+
+analysis_data$oy_race_gender %>% 
+  ggplot(aes(x = race_ethnicity, 
+             y = percent)) + 
+  geom_col(aes(fill = SEX_label)) + 
+  facet_wrap(~oy_flag) + 
+  coord_flip() + 
+  theme_classic() + 
+  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
+                group = SEX_label), 
+            size = 2, 
+            position = position_stack(vjust= .5)) + 
+  scale_y_continuous(labels = scales::percent) + 
+  theme(
+    strip.background = element_blank(), 
+    strip.text.x = element_text(face = 'bold'), 
+    axis.line.x = element_blank(), 
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank()
+  ) + 
+  labs(
+    x = "Race / Ethnicity", 
+    y = "Percent", 
+    fill = "Sex / Gender"
+  ) + 
+  scale_x_discrete(labels = function(x) str_wrap(x, 20))
+
+
+```
+
+```{r}
+
+analysis_data$oy_race_gender %>% 
+  filter(SEX_label != "Female") %>% 
+  ggplot(aes(x = race_ethnicity, 
+             y = percent)) + 
+  geom_col(aes(fill = oy_flag), 
+           position = 'dodge') + 
+  scale_x_discrete(labels = function(x) str_wrap(x, 10))
+
+
+```
+
+
+
 
 
 ## Population by PUMA
 
-- Pending
+```{r, eval = T}
 
+analysis_data$geo_puma_pop %>% 
+  ggplot() + 
+  geom_sf(aes(fill = opp_youth)) + 
+  geom_sf_text(label = 
+                  analysis_data$geo_puma_pop$opp_youth, 
+               size = 1.8) + 
+  theme_void() + 
+  scale_fill_gradient(low = "#fff7bc",
+                      high = "#D5802B",
+                      na.value = "white") + 
+  labs(fill = 
+         "Opportunity Youth Population")
 
-```{r, eval = F}
-
-## Alternative Visualizations
-analysis_data$oy_sex %>% 
-  ggplot(aes(x = oy_flag, 
-             y = percent)) + 
-  geom_point(aes(color = SEX_label)) + 
-  geom_errorbar(aes(ymin = !!error_bar_low, ymax = percent_upp), 
-                width = .2) + 
-  theme_classic() + 
-  labs(x = "Opportunity Youth", 
-       y = "Percent", 
-       color = "Sex / Gender") + 
-  scale_y_continuous(labels = scales::percent)
 
 
 ```
