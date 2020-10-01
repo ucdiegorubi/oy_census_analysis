@@ -99,10 +99,18 @@ analysis_data <-
     
   )
 
+analysis_data$geo_puma_pop = 
+  process_map_data(data = analysis_data$puma_oy_population, 
+                   names = 'oy_flag', 
+                   values = 'n') %>% 
+  mutate(chi_puma = PUMACE10 %in% pums_df$PUMA[pums_df$chicago_puma_flag])
+  
+
 
 # WRITE DATA --------------------------------------------------------------
 
 helper_functions$check_for_directory('analysis_data')
+
 
 readr::write_rds(x = analysis_data, 
                  path = 

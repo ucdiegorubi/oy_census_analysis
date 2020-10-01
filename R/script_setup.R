@@ -9,7 +9,8 @@ p_load(
   tidyverse, 
   tidycensus, 
   magrittr, 
-  srvyr
+  srvyr, 
+  tigris
 )
 
 

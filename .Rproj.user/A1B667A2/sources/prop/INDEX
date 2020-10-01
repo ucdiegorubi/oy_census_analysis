@@ -18,6 +18,7 @@
 %2Fprojects%2Fdiegocampos%2Foy_census%2Ffunctions%2Fidentify_opportunity_youth.R="3481ACF6"
 %2Fprojects%2Fdiegocampos%2Foy_census%2Ffunctions%2Fload_data_functions.R="41E3FC7C"
 %2Fprojects%2Fdiegocampos%2Foy_census%2Ffunctions%2Fpresentation_formatting.R="5DD7E458"
+%2Fprojects%2Fdiegocampos%2Foy_census%2Ffunctions%2Fprocess_map_data.R="3CA722ED"
 %2Fprojects%2Fdiegocampos%2Foy_census%2Ffunctions%2Frecategorize_race.R="37AF891D"
 %2Fprojects%2Fdiegocampos%2Foy_census%2Ffunctions%2Fviz_population_estimates.Rmd="9678612C"
 %2Fprojects%2Fdiegocampos%2Foy_census%2Fidentify_chicago_PUMA.R="B2F1D7C2"
@@ -32,4 +33,5 @@
 %2Fprojects%2Fdiegocampos%2Foy_census%2Ftesting_sandbox.R="58A182A9"
 %2Fprojects%2Fdiegocampos%2Foyseg_upl_dropout%2Fcohort_generator%2Fadd_derived_variables_to_cohorts%2Fcreate_relative_disconnection_point.R="9A0C9D8D"
 %2Fprojects%2Fdiegocampos%2Foyseg_upl_dropout%2Fcreate_cohort_analysis_data%2Fconfig.yaml="4AF740A5"
+%2Fprojects%2Fdiegocampos%2Freporting_tools%2Fpalettes.R="755C8572"
 ~%2Fprojects%2Fdiegocampos%2Foy_census%2Ftemp%2Fcreate_variable_names_answers.csv="069C8FDD"
