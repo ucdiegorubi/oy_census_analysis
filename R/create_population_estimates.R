@@ -52,6 +52,7 @@ pums_survey <-
 
 # CREATE DATA -------------------------------------------------------------
 
+# this will likely get huge at some point 
 analysis_data <- 
   list(
     
@@ -95,7 +96,11 @@ analysis_data <-
     
     oy_race_gender = 
       pums_survey %>% 
-      create_estimate(pums_survey = ., oy_flag, race_ethnicity, SEX_label)
+      create_estimate(pums_survey = ., oy_flag, race_ethnicity, SEX_label), 
+    
+    oy_race_gender_alternate = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., oy_flag, race_alternate, SEX_label)
     
   )
 

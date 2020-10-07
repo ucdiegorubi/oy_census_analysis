@@ -437,8 +437,9 @@ analysis_data$oy_race_gender %>%
 ```{r}
 
 
-analysis_data$oy_race_gender %>% 
-  ggplot(aes(x = race_ethnicity, 
+analysis_data$oy_race_gender_alternate %>% 
+  # filter(SEX_label != "Female") %>% 
+  ggplot(aes(x = race_alternate, 
              y = percent)) + 
   geom_col(aes(fill = SEX_label)) + 
   facet_wrap(~oy_flag) + 
@@ -457,20 +458,72 @@ analysis_data$oy_race_gender %>%
     axis.ticks.x = element_blank()
   ) + 
   labs(
-    x = "Race / Ethnicity", 
-    y = "Percent", 
-    fill = "Sex / Gender"
+    x = "Race", 
+    y = "Percentage", 
+    fill = "Sex"
   ) + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 20))
+  scale_x_discrete(labels = function(x) str_wrap(x, 20)) + 
+  scale_fill_manual(values = 
+                      c(
+                        "#fff7bc",
+                        "#D5802B"
+                      )) + 
+  guides(
+    # fill = FALSE
+    )
 
 
 ```
 
+
+
+```{r}
+analysis_data$oy_race_gender_alternate %>% 
+  filter(SEX_label != "Female") %>%
+  ggplot(aes(x = race_alternate, 
+             y = percent)) + 
+  geom_col(aes(fill = SEX_label), 
+           color = 'black') + 
+  facet_wrap(~oy_flag) + 
+  coord_flip() + 
+  theme_classic() + 
+  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
+                group = SEX_label), 
+            size = 2, 
+            position = position_stack(vjust= .5)) + 
+  scale_y_continuous(labels = scales::percent) + 
+  theme(
+    strip.background = element_blank(), 
+    strip.text.x = element_text(face = 'bold'), 
+    axis.line.x = element_blank(), 
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank()
+  ) + 
+  labs(
+    x = "Race", 
+    y = "Percentage and Race of ", 
+    fill = "Sex"
+  ) + 
+  scale_x_discrete(labels = function(x) str_wrap(x, 20)) + 
+  scale_fill_manual(values = 
+                      c(
+                        # "#fff7bc",
+                        "#D5802B"
+                      )) + 
+  guides(
+    fill = FALSE
+    ) + 
+  geom_errorbar(aes(ymin = percent, ymax = percent_upp), 
+                width = .3)
+```
+
+
+
 ```{r}
 
-analysis_data$oy_race_gender %>% 
+analysis_data$oy_race_gender_alternate %>% 
   filter(SEX_label != "Female") %>% 
-  ggplot(aes(x = race_ethnicity, 
+  ggplot(aes(x = race_alternate, 
              y = percent)) + 
   geom_col(aes(fill = oy_flag), 
            position = 'dodge') + 
