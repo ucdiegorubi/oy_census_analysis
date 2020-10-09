@@ -67,12 +67,21 @@ add_other_indicators <- function(pums_data){
     
   }
   
+  # there are a couple money variables of interest that we can adjust
+  # to constant dollars using [money related variable] and the ADJINC factor
+  income_constant_dollars <- function(income_variable, adjustment_variable){
+    
+    adjusted_money = income_variable * adjustment_variable 
+    
+  }
   
   pums_data <- 
     pums_data %>% 
     mutate(age_bracket = create_age_brackets(AGEP), 
            alt_age_bracket = alt_age_brackets(AGEP), 
-           child_flag = at_least_one_child(NOC))
+           child_flag = at_least_one_child(NOC), 
+           adjusted_income = income_constant_dollars(income_variable = PINCP, 
+                                            adjustment_variable = ADJINC))
   
   return(pums_data)
   

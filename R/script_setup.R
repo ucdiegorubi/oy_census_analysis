@@ -5,13 +5,13 @@
 
 if(!require(pacman)) install.packages('pacman')
 
-p_load(
-  tidyverse, 
-  tidycensus, 
-  magrittr, 
-  srvyr, 
-  tigris
-)
+# library(pacman)
+
+p_load(tidyverse, 
+       tidycensus, 
+       magrittr, 
+       srvyr, 
+       tigris)
 
 
 # LOAD FUNCTIONS ----------------------------------------------------------

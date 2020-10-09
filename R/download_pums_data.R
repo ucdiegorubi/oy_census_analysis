@@ -1,4 +1,5 @@
 # script to download PUMS data with variables of interest
+# library(here)
 
 source(
   here::here(
@@ -43,12 +44,16 @@ get_pums_variables <- function(){
 
 check_pums_variables <- function(){
   
+  # variables that we're interested in 
   pums_vars = get_pums_variables()
   
+  # variables available in PUMS files through tidycensus
   vars_available = tidycensus::pums_variables$var_code %>% unique()
   
+  # which are in which?
   test <- pums_vars %in%  vars_available
   
+  # return the variables that don't exist in the catalogue
   incorrect_variables <- pums_vars[which(test == FALSE)]
   
   if(any(test == FALSE)){
