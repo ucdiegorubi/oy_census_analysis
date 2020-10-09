@@ -144,7 +144,15 @@ PUMS_variables: [
   PAOC, 
   
   # used to adjust income to constant dollars
-  ADJINC
+  ADJINC, 
   
+  # I believe this identifies the relationship to the survey respondent
+  RELP, 
+  
+  # Subfamily number
+  SFN, 
+  
+  # subfamily relationship
+  SFR
   
   ]
