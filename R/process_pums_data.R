@@ -55,11 +55,24 @@ add_other_indicators <- function(pums_data){
     return(age_variable)
   }
   
+  at_least_one_child <- function(num_child){
+    
+    num_child <- 
+      
+      if_else(num_child >= 1, 
+              'At least one child', 
+              'No children')
+    
+    return(num_child)
+    
+  }
+  
   
   pums_data <- 
     pums_data %>% 
     mutate(age_bracket = create_age_brackets(AGEP), 
-           alt_age_bracket = alt_age_brackets(AGEP))
+           alt_age_bracket = alt_age_brackets(AGEP), 
+           child_flag = at_least_one_child(NOC))
   
   return(pums_data)
   

@@ -141,7 +141,10 @@ PUMS_variables: [
   JWTR,
   
   # presense and age of own children - not sure if this one is diferent from above
-  PAOC
+  PAOC, 
+  
+  # used to adjust income to constant dollars
+  ADJINC
   
   
   ]

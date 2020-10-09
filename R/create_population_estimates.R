@@ -33,6 +33,7 @@ pums_df <-
   mutate(
     across(
       .cols = c(oy_flag, 
+                child_flag,
                 age_bracket,
                 alt_age_bracket,
                 race_ethnicity, 
@@ -136,7 +137,8 @@ tabulate_dict <-
     "SSMC_label"    = 'same_sex_married', 
     "TYPE_label"    = 'hh_type', 
     "WIF_label"     = 'workers_in_fam', 
-    "ESP_label"     = 'parental_employment'
+    "ESP_label"     = 'parental_employment', 
+    "child_flag"    = "children"
   )
 
 
@@ -147,6 +149,9 @@ analysis_data$q2_household =
   map(.x = ., 
       .f = ~ create_estimate(pums_survey,oy_flag, !!.x)) %>% 
   set_names(nm = tabulate_dict$values)
+
+
+analysis_data$q2_dictionary = tabulate_dict
 
 
 # WRITE DATA --------------------------------------------------------------

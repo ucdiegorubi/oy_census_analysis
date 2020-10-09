@@ -8,6 +8,7 @@
 /projects/diegocampos/oy_census/configuration_files/census_api_key.yaml="1133BA6F"
 /projects/diegocampos/oy_census/configuration_files/pums_variables.yaml="DE461FD7"
 /projects/diegocampos/oy_census/create_powerpoint/demographics/demographic_estimates.Rmd="CD72DD4A"
+/projects/diegocampos/oy_census/create_powerpoint/household_structure/household_structure-estimates.Rmd="B84785D2"
 /projects/diegocampos/oy_census/functions/convert_to_survey.R="09821587"
 /projects/diegocampos/oy_census/functions/helper_functions.R="C1D011C8"
 /projects/diegocampos/oy_census/functions/identify_chicago_PUMA.R="7942EE72"

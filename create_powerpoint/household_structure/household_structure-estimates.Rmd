@@ -93,11 +93,9 @@ basic_plot <- function(data, fill_label = NULL){
 
 ```
 
-```{r}
-basic_plot(analysis_data$partnered)
-```
-
-
+Research Questions of Interest
+- Are Opportunity Youth caring for children?
+- What are the household income characteristics of Opportunity Youth?
 
 ## Partnered
 
