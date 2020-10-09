@@ -82,37 +82,193 @@ basic_plot <- function(data, fill_label = NULL){
               position = position_stack(vjust = .5)) +
     theme_classic() + 
     scale_y_continuous(labels = scales::percent) + 
-    labs(y = "Percent", 
-         caption = "Groups less than 5% suppressed for clarity") + 
+    # labs(y = "Percent", 
+    #      caption = "Groups less than 5% suppressed for clarity"
+    #      ) + 
     erase_y_axis + 
-    erase_x_legend
+    erase_x_legend + 
+    theme(axis.text.x = element_text(face = 'bold'))
     
     
+}
+
+single_plot <- function(data){
+  
+  data %>% 
+    ggplot(aes(x = oy_flag, y = percent)) + 
+    geom_col() + 
+    geom_errorbar(aes(ymax = percent_upp, ymin = percent_low), 
+                  width = .2) + 
+    theme_classic() + 
+    geom_text(aes(label = format(percent, digits = 3)), 
+              position = position_stack(vjust = .5)) + 
+    # labs( y = "Average Number of Children") + 
+    erase_x_legend + 
+    theme(axis.text.x = element_text(face = 'bold'))
 }
 
 
 ```
 
-Research Questions of Interest
-- Are Opportunity Youth caring for children?
-- What are the household income characteristics of Opportunity Youth?
+# Research Questions of Interest
 
-## Partnered
+* Are Opportunity Youth caring for children?
+* What are the household income characteristics of Opportunity Youth?
+* Mobility Status
+
+# Do they have children?
 
 ```{r}
 
-analysis_data$partnered %>% 
-  ggplot(aes(x = oy_flag, y = percent, fill = PARTNER_label)) + 
-  geom_col()
+analysis_data$children %>% 
+  basic_plot() + 
+  labs(fill = "Parental Status")
   
 
 
 
 ```
 
-## Marital Status
+# Number of Children
+
 ```{r}
 
+analysis_data$num_children %>% 
+  single_plot() + 
+  labs(
+    y = "Average number of children"
+  )
+
+
+
 ```
+
+
+# Income Characteristics: Household Income
+
+```{r}
+analysis_data$average_income %>% 
+  ggplot(aes(x = oy_flag, y = percent)) + 
+  geom_col() + 
+  geom_errorbar(aes(ymax = percent_upp, ymin = percent), 
+                width = .2) + 
+  theme_classic() + 
+  geom_text(aes(label = scales::dollar(percent, digits = 3)), 
+           position = position_stack(vjust = .5)) + 
+  labs( y = "Average Yearly Income") + 
+  scale_y_continuous(labels = scales::dollar) +
+  erase_x_legend
+
+
+```
+
+### Income Characteristics: Income Bracket
+
+
+```{r}
+
+analysis_data$income_bracket %>% 
+  # filter(oy_flag != "Everyone Else") %>% 
+  basic_plot() + 
+  labs(fill = "Income Bracket")
+
+
+```
+
+# Income Characteristics: Food Stamps
+
+
+```{r}
+analysis_data$food_stamps %>% 
+  basic_plot() + 
+  labs(fill = "Food Stamp Recipient")
+
+
+```
+
+# Household Type:
+
+```{r}
+
+analysis_data$hh_type %>% 
+  basic_plot() + 
+  labs(fill = "Type of Household")
+
+
+
+```
+# Household Characteristics: Workers in Family
+
+
+```{r}
+analysis_data$workers_in_fam %>% 
+  basic_plot() + 
+  labs(fill = "Workers in Family")
+```
+
+
+
+
+## Marital Status / Partnered
+```{r}
+
+analysis_data$married %>% 
+  basic_plot() + 
+  labs(fill = "Marital Status")
+
+
+
+```
+
+## Partnered
+
+```{r}
+analysis_data$partnered %>% 
+  basic_plot() + 
+  labs("Partner Status")
+```
+
+
+
+# Mobility: Migration
+
+```{r}
+
+analysis_data$migration %>% 
+  basic_plot() + 
+  labs(fill = "Migration Status")
+
+```
+
+# Mobility: Mode of Transportation
+```{r}
+
+analysis_data$transportation_mode %>% 
+  mutate(JWTR_label = str_remove(JWTR_label, "\\(.*\\)")) %>% 
+  basic_plot() + 
+  labs(fill = "Mode of Transport")
+
+```
+
+# Migration: Average Commute Time
+
+```{r}
+
+analysis_data$commute_bracket %>% 
+  basic_plot() + 
+  labs(fill = "Commute Time")
+
+
+
+```
+
+
+
+```{r}
+names(analysis_data)
+```
+
+
+
 
 

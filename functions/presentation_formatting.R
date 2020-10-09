@@ -11,7 +11,9 @@ figure_helpers <-
           oy_flag == "opp_youth"     ~ "Opportunity Youth", 
           TRUE                       ~ oy_flag)
       
-      oy_flag = factor(oy_flag)
+      oy_flag = factor(oy_flag, levels = c("Everyone Else", 
+                                           "Connected Youth", 
+                                           "Opportunity Youth"))
       
       return(oy_flag)
       

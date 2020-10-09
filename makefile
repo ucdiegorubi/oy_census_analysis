@@ -11,7 +11,7 @@ CONFIG = $(CURRENT_DIR)/configuration_files
 
 # outputs 
 pums_data = $(RAW_DATA)/il_pums_data.csv
-#pums_processed = $(CLEAN_DATA)/il_pums_data_clean.csv
+pums_processed = $(CLEAN_DATA)/il_pums_data_clean.csv
 #estimates = $(ANALYSIS_DATA)/oy_population_estimates.RDS
 
 
@@ -19,13 +19,13 @@ $(pums_data): $(SCRIPTS)/download_pums_data.R $(CONFIG)/pums_variables.yaml
 	$(R_version) $(SCRIPTS)/download_pums_data.R
 
 
-#$(pums_processed): $(SCRIPTS)/process_pums_data.R $(pums_data)
-#		Rscript $(SCRIPTS)/process_pums_data.R
+$(pums_processed): $(SCRIPTS)/process_pums_data.R $(pums_data)
+	$(R_version) $(SCRIPTS)/process_pums_data.R
 
 #$(estimates): $(SCRIPTS)/create_population_estimates.R $(pums_processed)
 #		Rscript $(SCRIPTS)/create_population_estimates.R
 
 clean: 
 		rm -rf $(pums_data)
-#		rm -rf $(CLEAN_DATA)
+		rm -rf $(CLEAN_DATA)
 #		rm -rf $(ANALYSIS_DATA)

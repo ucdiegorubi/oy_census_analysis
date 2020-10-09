@@ -22,6 +22,16 @@ create_estimate <- function(pums_survey, ...){
   
 }
 
+numeric_estimate <- function(pums_survey, count_col, ...){
+  
+  pums_survey %>% 
+    group_by(...) %>% 
+    summarize(
+      percent = survey_mean(x = {{count_col}}, vartype = c('se', 'ci'))
+    )
+  
+}
+
 # RUN ---------------------------------------------------------------
 pums_df <- 
   load_data$load_clean_pums()
@@ -38,9 +48,11 @@ pums_df <-
                 alt_age_bracket,
                 race_ethnicity, 
                 race_alternate,
-                adjusted_income,
-                NOC, 
-                NP, 
+                income_bracket,
+                commute_bracket,
+                # adjusted_income,
+                # NOC, 
+                # NP, 
                 contains('label')),  
       factor))
 
@@ -131,15 +143,17 @@ tabulate_dict <-
     "HHL_label"     = "hh_language", 
     "HHT_label"     = "hh_type", 
     "JWTR_label"    = "transportation_mode", 
-    "MIG_label"     = "mobility",   
+    "MIG_label"     = "migration",   
     "MULTG_label"   = 'multigen', 
-    "NOC"           = "num_children",
-    "NP"            = "num_people",
+    "income_bracket"= "income_bracket",
+    # "NOC"           = "num_children",
+    # "NP"            = "num_people",
     "SSMC_label"    = 'same_sex_married', 
     "TYPE_label"    = 'hh_type', 
     "WIF_label"     = 'workers_in_fam', 
     "ESP_label"     = 'parental_employment', 
-    "child_flag"    = "children"
+    "child_flag"    = "children", 
+    'commute_bracket' = "commute_bracket"
   )
 
 
@@ -152,7 +166,25 @@ analysis_data$q2_household =
   set_names(nm = tabulate_dict$values)
 
 
+analysis_data$q2_household$average_income = 
+  pums_survey %>% 
+  numeric_estimate(adjusted_income, oy_flag)
+
+analysis_data$q2_household$num_children = 
+  pums_survey %>% 
+  numeric_estimate(NOC, oy_flag)
+
+analysis_data$q2_household$num_children = 
+  pums_survey %>% 
+  numeric_estimate(NP, oy_flag)
+
+analysis_data$q2_household$travel_time_to_work = 
+  pums_survey %>% 
+  numeric_estimate(JWMNP, oy_flag)
+
+
 analysis_data$q2_dictionary = tabulate_dict
+
 
 
 # WRITE DATA --------------------------------------------------------------
