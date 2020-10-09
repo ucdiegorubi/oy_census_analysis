@@ -74,4 +74,7 @@ The values in work related variables are less straight forward and contain a var
 
 *9/25/2020*: 
 - First presentation of preliminary results
-- 
+
+*10/8/2020:*
+ - There are parsing failures when loading pums_df for the SCH variable, which identifies whether or not someone was enrolled in school. 
+        - Occurs when I'm first loading the PUMS file directly after downloading in the process_pums_data script. 

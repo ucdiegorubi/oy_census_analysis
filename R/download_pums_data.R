@@ -35,7 +35,30 @@ get_pums_variables <- function(){
   config <- 
     helper_functions$load_configuration_file('pums_variables.yaml')
   
+  config$PUMS_variables <- unique(stringr::str_to_upper(config$PUMS_variables))
+  
   return(config$PUMS_variables)
+  
+}
+
+check_pums_variables <- function(){
+  
+  pums_vars = get_pums_variables()
+  
+  vars_available = tidycensus::pums_variables$var_code %>% unique()
+  
+  test <- pums_vars %in%  vars_available
+  
+  incorrect_variables <- pums_vars[which(test == FALSE)]
+  
+  if(any(test == FALSE)){
+    
+    message("One or more variables are incorrect")
+    print(incorrect_variables)
+    
+  } else{
+    message("All variables are correct")
+  }
   
 }
 
@@ -45,6 +68,8 @@ get_pums_variables <- function(){
 helper_functions$load_functions('load_data_functions.R')
 
 helper_functions$check_for_directory('raw_data')
+
+check_pums_variables()
 
 if(
   file.exists(here::here('raw_data', 

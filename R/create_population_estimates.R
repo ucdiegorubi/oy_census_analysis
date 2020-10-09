@@ -32,14 +32,14 @@ pums_df <-
   pums_df %>% 
   mutate(
     across(
-      .cols = c(SEX_label, 
-                DIS_label, 
-                RAC1P_label, 
-                oy_flag, 
+      .cols = c(oy_flag, 
                 age_bracket,
                 alt_age_bracket,
                 race_ethnicity, 
-                race_alternate), 
+                race_alternate, 
+                NOC, 
+                NP, 
+                contains('label')),  
       factor))
 
 pums_survey <- 
@@ -51,9 +51,11 @@ pums_survey <-
 
 
 # CREATE DATA -------------------------------------------------------------
+analysis_data <- 
+  list()
 
 # this will likely get huge at some point 
-analysis_data <- 
+analysis_data$q1_demo <- 
   list(
     
     total_population_age_bracket = 
@@ -98,19 +100,53 @@ analysis_data <-
       pums_survey %>% 
       create_estimate(pums_survey = ., oy_flag, race_ethnicity, SEX_label), 
     
+    oy_edu_attainment = 
+      pums_survey %>% 
+      create_estimate(pums_survey = ., oy_flag, SCHL_label),
+    
     oy_race_gender_alternate = 
       pums_survey %>% 
-      create_estimate(pums_survey = ., oy_flag, race_alternate, SEX_label)
+      create_estimate(pums_survey = ., oy_flag, race_alternate, SEX_label) 
     
   )
 
-analysis_data$geo_puma_pop = 
-  process_map_data(data = analysis_data$puma_oy_population, 
-                   names = 'oy_flag', 
-                   values = 'n') %>% 
-  mutate(chi_puma = PUMACE10 %in% pums_df$PUMA[pums_df$chicago_puma_flag]) %>% 
-  filter(chi_puma)
+analysis_data$q1_demo$geo_puma_pop =
   
+  process_map_data(data = analysis_data$q1_demo$puma_oy_population,
+                   names = 'oy_flag',
+                   values = 'n') %>%
+  mutate(chi_puma = PUMACE10 %in% pums_df$PUMA[pums_df$chicago_puma_flag]) %>%
+  filter(chi_puma)
+
+# HOUSEHOLD STRUCTURE QUESTION --------------------------------------------
+
+tabulate_dict <- 
+  Dict::dict(
+    "PARTNER_label" = "partnered", 
+    "SCHL_label"    = "edu_attained", 
+    "FS_label"      = "food_stamps",  
+    "MAR_label"     = "married", 
+    "HHL_label"     = "hh_language", 
+    "HHT_label"     = "hh_type", 
+    "JWTR_label"    = "transportation_mode", 
+    "MIG_label"     = "mobility",   
+    "MULTG_label"   = 'multigen', 
+    "NOC"           = "num_children",
+    "NP"            = "num_people",
+    "SSMC_label"    = 'same_sex_married', 
+    "TYPE_label"    = 'hh_type', 
+    "WIF_label"     = 'workers_in_fam', 
+    "ESP_label"     = 'parental_employment'
+  )
+
+
+
+analysis_data$q2_household = 
+  
+  rlang::syms(tabulate_dict$keys) %>% 
+  map(.x = ., 
+      .f = ~ create_estimate(pums_survey,oy_flag, !!.x)) %>% 
+  set_names(nm = tabulate_dict$values)
 
 
 # WRITE DATA --------------------------------------------------------------
@@ -124,6 +160,8 @@ readr::write_rds(x = analysis_data,
                      'analysis_data', 
                      'oy_population_estimates.RDS'
                    ))
+
+
 
 
 

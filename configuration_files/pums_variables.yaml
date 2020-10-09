@@ -50,5 +50,98 @@ PUMS_variables: [
   # total person income (not sure the distinction)
   PINCP,
   #income to poverty ratio
-  POVPIP
-]
+  POVPIP, 
+  
+
+  # number of people in household
+  NP,  
+  
+  #type of unit
+  TYPE, 
+  
+  # number of bedrooms
+  BDSP, 
+  
+  # yearly food stamps
+  FS, 
+  
+  #laptop access / important for job application
+  LAPTOP, 
+  
+  #broadband access
+  HISPEED, 
+  
+  #first mortgage payment
+  MRGP, 
+  
+  #monthly parents
+  RNTP, 
+  
+  # property value
+  VALP, 
+  
+  # yearly water cost? shouldn't be a thing in Chicago
+  WATP, 
+  
+  #gross rent 
+  GRNTP, 
+  
+  #gross rent as a percentage of household income
+  GRPIP, 
+  
+  # household language
+  HHL, 
+  
+  #household family type
+  HHT, 
+  
+  # household income past 12 months
+  HINCP, 
+  
+  #H household presence and age of own children
+  HUPAOC, 
+  
+  # limited english speaking household
+  LNGI, 
+  
+  # multigenerational household
+  MULTG, 
+  
+  # number of own children in household
+  NOC, 
+  
+  # number of persons in family
+  NPF, 
+  
+  # unmarried partner in household
+  PARTNER, 
+  
+  # presense of subfamilies in household
+  PSF, 
+  
+  # same-sex married couple household
+  SSMC, 
+  
+  # workers in family past 12 months
+  WIF, 
+  
+  # employment status of parnets
+
+  # marital status
+  MAR, 
+  
+  #mobility status
+  MIG, 
+  
+
+  # travel time to workers
+  JWMNP, 
+  
+  # means of transportation to workers
+  JWTR,
+  
+  # presense and age of own children - not sure if this one is diferent from above
+  PAOC
+  
+  
+  ]
