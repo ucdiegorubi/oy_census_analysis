@@ -1,0 +1,287 @@
+---
+title: "Household Structure (Preliminary)"
+author: "Diego Campos"
+date: "10/8/2020"
+output: powerpoint_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning = F, 
+                      message = F, 
+                      fig.height = 4, 
+                      fig.width = 8)
+```
+
+```{r load-libraries-functions}
+
+source(
+  here::here(
+    'R', 
+    'presentation_setup.R'
+  )
+)
+
+
+```
+
+```{r load-data}
+
+analysis_data <- 
+  load_data$load_population_estimates()[['q2_household']]
+
+
+
+
+```
+
+```{r}
+# analysis_data <- 
+#   modify(.x = analysis_data, 
+#          .f = ~.x %>% mutate(oy_flag = figure_helpers$format_oy_variable(oy_flag)))
+
+analysis_data <- 
+  map(
+    .x = analysis_data, 
+    .f = ~ 
+      .x %>% 
+      modify_at(.x = ., 
+                .at = 'oy_flag', 
+                .f = figure_helpers$format_oy_variable) %>% 
+      modify_at(.x = ., 
+                .at = 'oy_hh_flag', 
+                .f = figure_helpers$format_oy_hh_variable))
+
+
+erase_y_axis = 
+   theme(
+    axis.text.y = element_blank(), 
+    axis.line.y = element_blank(), 
+    axis.title.y = element_blank(), 
+    axis.ticks.y = element_blank()
+  )
+
+erase_x_legend = 
+  theme(
+    axis.title.x = element_blank()
+  )
+
+
+# Settings for the lower error bar
+# other option is percent_low
+error_bar_low <- 
+  rlang::sym('percent')
+
+# color contrasts between Connected Youth and Opportunity Youth
+# color_contrast <- 
+#   c(`Connected Youth` = "#800000", `Opportunity Youth` = '#D5802B')
+
+color_contrast <- 
+  c(`Connected Youth` = "#767676", `Opportunity Youth` = '#D5802B')
+```
+
+```{r}
+basic_plot <- function(data, fill_label = NULL){
+  
+  fill_col = names(data)[2] %>% rlang::sym()
+  
+  x_col =    names(data)[str_detect(names(data), "oy")] %>% rlang::sym()
+  
+  data %>% 
+    ggplot(aes(x = !!x_col, y = percent, fill = !!fill_col)) + 
+    geom_col() + 
+    geom_text(aes(label = if_else(percent > .05, 
+                                  scales::percent(percent, accuracy = .1), 
+                                  ""), 
+                  group = !!fill_col), 
+              position = position_stack(vjust = .5)) +
+    theme_classic() + 
+    scale_y_continuous(labels = scales::percent) + 
+    # labs(y = "Percent", 
+    #      caption = "Groups less than 5% suppressed for clarity"
+    #      ) + 
+    erase_y_axis + 
+    erase_x_legend + 
+    theme(axis.text.x = element_text(face = 'bold'))
+    
+    
+}
+
+single_plot <- function(data, x_col){
+  
+  x_col =    names(data)[str_detect(names(data), "oy")] %>% rlang::sym()
+  
+  data %>% 
+    ggplot(aes(x = !!x_col, y = percent)) + 
+    geom_col() + 
+    geom_errorbar(aes(ymax = percent_upp, ymin = percent_low), 
+                  width = .2) + 
+    theme_classic() + 
+    geom_text(aes(label = format(percent, digits = 3)), 
+              position = position_stack(vjust = .5)) + 
+    # labs( y = "Average Number of Children") + 
+    erase_x_legend + 
+    theme(axis.text.x = element_text(face = 'bold'))
+}
+
+
+```
+
+# Research Questions of Interest
+
+* Are Opportunity Youth caring for children?
+* What are the household income characteristics of Opportunity Youth?
+* Mobility Status
+
+# Do they have children?
+
+```{r}
+
+analysis_data$hh_children %>% 
+  basic_plot() + 
+  labs(fill = "Parental Status")
+  
+
+
+
+```
+
+# Number of Children
+
+```{r}
+
+analysis_data$hh_num_children %>% 
+  single_plot() + 
+  labs(
+    y = "Average number of children"
+  )
+
+
+
+```
+
+
+# Income Characteristics: Household Income
+
+```{r}
+analysis_data$hh_average_income %>% 
+  ggplot(aes(x = oy_hh_flag, y = percent)) + 
+  geom_col() + 
+  geom_errorbar(aes(ymax = percent_upp, ymin = percent), 
+                width = .2) + 
+  theme_classic() + 
+  geom_text(aes(label = scales::dollar(percent, digits = 3)), 
+           position = position_stack(vjust = .5)) + 
+  labs( y = "Average Yearly Income") + 
+  scale_y_continuous(labels = scales::dollar) +
+  erase_x_legend + 
+  coord_flip()
+
+
+```
+
+# Income Characteristics: Income Bracket
+
+
+```{r}
+
+analysis_data$income_bracket %>% 
+  # filter(oy_flag != "Everyone Else") %>% 
+  basic_plot() + 
+  labs(fill = "Income Bracket")
+
+
+```
+
+# Income Characteristics: Food Stamps
+
+
+```{r}
+analysis_data$hh_food_stamps %>% 
+  basic_plot() + 
+  labs(fill = "Food Stamp Recipient") + 
+  scale_x_discrete(labels = function(x) str_wrap(x, 10))
+
+
+```
+
+# Household Type:
+
+```{r}
+
+analysis_data$hh_type %>% 
+  basic_plot() + 
+  labs(fill = "Type of Household")
+
+
+
+```
+# Household Characteristics: Workers in Family
+
+
+```{r}
+analysis_data$workers_in_fam %>% 
+  basic_plot() + 
+  labs(fill = "Workers in Family")
+```
+
+
+
+
+# Marital Status / Partnered
+```{r}
+
+analysis_data$hh_married %>% 
+  basic_plot() + 
+  labs(fill = "Marital Status")
+
+
+
+```
+
+# Partnered
+
+```{r}
+analysis_data$hh_partnered %>% 
+  basic_plot() + 
+  labs("Partner Status")
+```
+
+
+
+# Mobility: Migration
+
+```{r}
+
+analysis_data$hh_migration %>% 
+  basic_plot() + 
+  labs(fill = "Migration Status")
+
+```
+
+# Mobility: Mode of Transportation
+```{r}
+
+analysis_data$hh_transportation_mode %>% 
+  mutate(JWTR_label = str_remove(JWTR_label, "\\(.*\\)")) %>% 
+  basic_plot() + 
+  labs(fill = "Mode of Transport")
+
+```
+
+# Migration: Average Commute Time
+
+```{r}
+
+analysis_data$commute_bracket %>% 
+  basic_plot() + 
+  labs(fill = "Commute Time")
+
+
+
+```
+
+
+
+
+

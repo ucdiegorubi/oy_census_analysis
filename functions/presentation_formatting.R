@@ -19,6 +19,17 @@ figure_helpers <-
       
     }, 
     
+    format_oy_hh_variable = function(oy_hh_flag){
+      
+      oy_hh_flag = 
+        factor(x = oy_hh_flag, levels = unique(oy_hh_flag)[c(3,4,1,2,5,6)])
+      
+      
+      return(oy_hh_flag)
+      
+      
+    }, 
+    
     fig_help = 
       list(
         N = "N = ", 

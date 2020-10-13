@@ -103,6 +103,7 @@ add_other_indicators <- function(pums_data){
   
   create_commute_bracket <- function(commute_var){
     # breaking down the commute variable into brackets 
+    # arbitrarily deifned
     
     commute_var <- 
       cut(commute_var, 
@@ -127,6 +128,43 @@ add_other_indicators <- function(pums_data){
     
   }
   
+  identify_head_of_household <- function(RELP){
+    
+    # relationship variable 
+    # per IPUMS and consultation with ACS Data Users Group, 
+    # RELP == 00 referes to reference person, which in this case is 
+    # the head of household in the survey
+    
+    head_of_household <- 
+      if_else(RELP == 0, 
+              TRUE,
+              FALSE)
+    
+    return(head_of_household)
+      
+
+  }
+  
+  identify_hh_oy <- function(oy_flag, head_hh_flag){
+    
+    head_hh_oy <-
+      case_when(
+        oy_flag == "opp_youth" & head_hh_flag == TRUE        ~ "Opportunity Youth - Head of Household", 
+        oy_flag == "opp_youth" & head_hh_flag == FALSE       ~ "Opportunity Youth - Non-Head of Household", 
+        oy_flag == "connected_youth" & head_hh_flag == TRUE  ~ "Connected Youth - Head of Household", 
+        oy_flag == "connected_youth" & head_hh_flag == FALSE ~ "Connected Youth - Non-Head of Household", 
+        oy_flag == "everyone_else"   & head_hh_flag == TRUE  ~ "Everyone Else - Head of Household", 
+        oy_flag == "everyone_else"   & head_hh_flag == FALSE ~ "Eveyrone Else - Non-Head of Household", 
+        TRUE ~ oy_flag
+      )
+    
+    
+    
+    return(head_hh_oy)
+    
+    
+  }
+  
   # RUN FUNCTIONS
   pums_data <- 
     pums_data %>% 
@@ -136,9 +174,13 @@ add_other_indicators <- function(pums_data){
            adjusted_income = income_constant_dollars(income_variable = PINCP, 
                                             adjustment_variable = ADJINC), 
            income_bracket = create_income_brackets(adjusted_income), 
-           commute_bracket = create_commute_bracket(JWMNP))
+           commute_bracket = create_commute_bracket(JWMNP), 
+           head_hh_flag = identify_head_of_household(RELP),
+           oy_hh_flag = identify_hh_oy(oy_flag, head_hh_flag))
   
   return(pums_data)
+  
+  
   
   
 }

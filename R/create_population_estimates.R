@@ -50,9 +50,8 @@ pums_df <-
                 race_alternate,
                 income_bracket,
                 commute_bracket,
-                # adjusted_income,
-                # NOC, 
-                # NP, 
+                oy_hh_flag,
+
                 contains('label')),  
       factor))
 
@@ -69,7 +68,7 @@ analysis_data <-
   list()
 
 # this will likely get huge at some point 
-analysis_data$q1_demo <- 
+analysis_data$q1_demographics <- 
   list(
     
     total_population_age_bracket = 
@@ -124,7 +123,7 @@ analysis_data$q1_demo <-
     
   )
 
-analysis_data$q1_demo$geo_puma_pop =
+analysis_data$q1_demographics$geo_puma_pop =
   
   process_map_data(data = analysis_data$q1_demo$puma_oy_population,
                    names = 'oy_flag',
@@ -157,7 +156,7 @@ tabulate_dict <-
   )
 
 
-
+# original that is only concerned with the various OY groups 
 analysis_data$q2_household = 
   
   rlang::syms(tabulate_dict$keys) %>% 
@@ -165,25 +164,64 @@ analysis_data$q2_household =
       .f = ~ create_estimate(pums_survey,oy_flag, !!.x)) %>% 
   set_names(nm = tabulate_dict$values)
 
+# variant that parses out the above by head of household
+analysis_data$q2_household = 
+  append(analysis_data$q2_household, 
+         
+         rlang::syms(tabulate_dict$keys) %>% 
+           map(.x = ., 
+               .f = ~ create_estimate(pums_survey, oy_hh_flag, !!.x)) %>% 
+           set_names(nm = paste0('hh_',tabulate_dict$values)))
 
-analysis_data$q2_household$average_income = 
-  pums_survey %>% 
-  numeric_estimate(adjusted_income, oy_flag)
+# Numeric point estimates
+numeric_cols <- 
+  Dict::dict("adjusted_income" = "average_income", 
+             'NOC' = "num_children", 
+             'NP'= "number_of_people", 
+             "JWMNP" = "travel_time_to_work")
 
-analysis_data$q2_household$num_children = 
-  pums_survey %>% 
-  numeric_estimate(NOC, oy_flag)
+analysis_data$q2_household <- 
+  append(analysis_data$q2_household, 
+         
+         rlang::syms(numeric_cols$keys) %>% 
+           map(.x = ., 
+               .f = ~ numeric_estimate(pums_survey = pums_survey, 
+                                     count_col = !!.x, 
+                                     oy_flag)) %>% 
+           set_names(nm = numeric_cols$values))
 
-analysis_data$q2_household$num_children = 
-  pums_survey %>% 
-  numeric_estimate(NP, oy_flag)
+analysis_data$q2_household = 
+  append(analysis_data$q2_household, 
+         rlang::syms(numeric_cols$keys) %>% 
+           map(.x = ., 
+               .f = ~ numeric_estimate(pums_survey = pums_survey, 
+                                       count_col = !!.x, 
+                                       oy_hh_flag)) %>% 
+           set_names(nm = paste0('hh_',numeric_cols$values)))
 
-analysis_data$q2_household$travel_time_to_work = 
-  pums_survey %>% 
-  numeric_estimate(JWMNP, oy_flag)
 
 
-analysis_data$q2_dictionary = tabulate_dict
+# analysis_data$q2_household$average_income = 
+#   pums_survey %>% 
+#   numeric_estimate(adjusted_income, oy_hh_flag)
+# 
+# analysis_data$q2_household$num_children = 
+#   pums_survey %>% 
+#   numeric_estimate(NOC, oy_hh_flag)
+# 
+# analysis_data$q2_household$num_children = 
+#   pums_survey %>% 
+#   numeric_estimate(NP, oy_hh_flag)
+# 
+# analysis_data$q2_household$travel_time_to_work = 
+#   pums_survey %>% 
+#   numeric_estimate(JWMNP, oy_flag)
+
+
+# SAVING DICTIONARIES -----------------------------------------------------
+
+analysis_data$q2_dictionary_qual = tabulate_dict
+analysis_data$q2_dictionary_numeric = numeric_cols
 
 
 
