@@ -53,6 +53,8 @@ analysis_data <-
                 .f = figure_helpers$format_oy_hh_variable))
 
 
+
+
 erase_y_axis = 
    theme(
     axis.text.y = element_blank(), 
@@ -69,7 +71,7 @@ erase_x_legend =
 
 # Settings for the lower error bar
 # other option is percent_low
-error_bar_low <- 
+error_bar_setting <- 
   rlang::sym('percent')
 
 # color contrasts between Connected Youth and Opportunity Youth
@@ -78,6 +80,18 @@ error_bar_low <-
 
 color_contrast <- 
   c(`Connected Youth` = "#767676", `Opportunity Youth` = '#D5802B')
+
+color_contrast_alt <- color_contrast
+names(color_contrast_alt) <- NULL
+
+color_palette <- 
+  ggsci::pal_uchicago(palette = 'default')
+
+color_palette_light <- 
+  ggsci::pal_uchicago(palette = 'light')
+  
+
+
 ```
 
 ```{r}
@@ -87,9 +101,12 @@ basic_plot <- function(data, fill_label = NULL){
   
   x_col =    names(data)[str_detect(names(data), "oy")] %>% rlang::sym()
   
+  
+  
   data %>% 
+    filter(!str_detect(!!x_col, '(Everyone)|(Eveyrone)')) %>% 
     ggplot(aes(x = !!x_col, y = percent, fill = !!fill_col)) + 
-    geom_col() + 
+    geom_col(color = 'black') + 
     geom_text(aes(label = if_else(percent > .05, 
                                   scales::percent(percent, accuracy = .1), 
                                   ""), 
@@ -97,12 +114,13 @@ basic_plot <- function(data, fill_label = NULL){
               position = position_stack(vjust = .5)) +
     theme_classic() + 
     scale_y_continuous(labels = scales::percent) + 
-    # labs(y = "Percent", 
-    #      caption = "Groups less than 5% suppressed for clarity"
-    #      ) + 
+
     erase_y_axis + 
     erase_x_legend + 
-    theme(axis.text.x = element_text(face = 'bold'))
+    theme(axis.text.x = element_text(face = 'bold')) + 
+    labs(
+      caption = "Cells representing less than 5% suppressed for clarity") + 
+    ggsci::scale_fill_uchicago()
     
     
 }
@@ -113,16 +131,23 @@ single_plot <- function(data, x_col){
   
   data %>% 
     ggplot(aes(x = !!x_col, y = percent)) + 
-    geom_col() + 
-    geom_errorbar(aes(ymax = percent_upp, ymin = percent_low), 
+    geom_col(color = 'black', 
+             fill = color_contrast[2]) + 
+    geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
                   width = .2) + 
     theme_classic() + 
     geom_text(aes(label = format(percent, digits = 3)), 
               position = position_stack(vjust = .5)) + 
     # labs( y = "Average Number of Children") + 
     erase_x_legend + 
-    theme(axis.text.x = element_text(face = 'bold'))
+    theme(axis.text.x = element_text(face = 'bold')) + 
+    labs(
+      caption = "Cells representing less than 5% suppressed for clarity"
+    )
 }
+
+wrap_x_labels = 
+  scale_x_discrete(labels = function(x) str_wrap(x,10))
 
 
 ```
@@ -139,7 +164,9 @@ single_plot <- function(data, x_col){
 
 analysis_data$hh_children %>% 
   basic_plot() + 
-  labs(fill = "Parental Status")
+  labs(fill = "Parental Status") + 
+  wrap_x_labels + 
+  scale_fill_manual(values = color_contrast_alt)
   
 
 
@@ -154,28 +181,37 @@ analysis_data$hh_num_children %>%
   single_plot() + 
   labs(
     y = "Average number of children"
-  )
+  ) + 
+  wrap_x_labels
 
 
 
 ```
 
 
-# Income Characteristics: Household Income
+# Income Characteristics: Household Incomesingle_plot
+
+
 
 ```{r}
 analysis_data$hh_average_income %>% 
   ggplot(aes(x = oy_hh_flag, y = percent)) + 
-  geom_col() + 
-  geom_errorbar(aes(ymax = percent_upp, ymin = percent), 
+  geom_col(color = 'black', 
+           fill = color_contrast[2]) + 
+  geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
                 width = .2) + 
   theme_classic() + 
-  geom_text(aes(label = scales::dollar(percent, digits = 3)), 
-           position = position_stack(vjust = .5)) + 
-  labs( y = "Average Yearly Income") + 
-  scale_y_continuous(labels = scales::dollar) +
+  geom_text(aes(label = scales::dollar(percent)), 
+            position = position_stack(vjust = .5)) + 
+  # labs( y = "Average Number of Children") + 
   erase_x_legend + 
-  coord_flip()
+  theme(axis.text.x = element_text(face = 'bold')) + 
+  labs(
+    y = "Average Total Income",
+    caption = "Cells representing less than 5% suppressed for clarity"
+  ) + 
+  wrap_x_labels + 
+  scale_y_continuous(labels = scales::dollar)
 
 
 ```
@@ -185,10 +221,12 @@ analysis_data$hh_average_income %>%
 
 ```{r}
 
-analysis_data$income_bracket %>% 
+analysis_data$hh_income_bracket %>% 
   # filter(oy_flag != "Everyone Else") %>% 
   basic_plot() + 
-  labs(fill = "Income Bracket")
+  labs(fill = "Income Bracket") + 
+  wrap_x_labels + 
+  scale_fill_manual(values = c(color_contrast_alt[2],color_palette(9), color_palette_light(9)))
 
 
 ```
@@ -200,7 +238,8 @@ analysis_data$income_bracket %>%
 analysis_data$hh_food_stamps %>% 
   basic_plot() + 
   labs(fill = "Food Stamp Recipient") + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 10))
+  wrap_x_labels + 
+  scale_fill_manual(values = color_contrast_alt)
 
 
 ```
@@ -211,18 +250,26 @@ analysis_data$hh_food_stamps %>%
 
 analysis_data$hh_type %>% 
   basic_plot() + 
-  labs(fill = "Type of Household")
+  labs(fill = "Type of Household") + 
+  scale_fill_manual(values = c(color_contrast[2], color_palette_light(8)))
+  
 
 
 
 ```
+
+
 # Household Characteristics: Workers in Family
 
 
 ```{r}
-analysis_data$workers_in_fam %>% 
+analysis_data$hh_workers_in_fam %>% 
   basic_plot() + 
-  labs(fill = "Workers in Family")
+  labs(fill = "Workers in Family") + 
+  wrap_x_labels + 
+  scale_fill_manual(values = c(color_contrast_alt[2], color_palette_light(4)))
+  
+
 ```
 
 
@@ -233,7 +280,10 @@ analysis_data$workers_in_fam %>%
 
 analysis_data$hh_married %>% 
   basic_plot() + 
-  labs(fill = "Marital Status")
+  labs(fill = "Marital Status") + 
+  wrap_x_labels  + 
+  scale_fill_manual(values = c(color_contrast_alt[2], rev(color_palette(5))))
+  
 
 
 
@@ -244,7 +294,9 @@ analysis_data$hh_married %>%
 ```{r}
 analysis_data$hh_partnered %>% 
   basic_plot() + 
-  labs("Partner Status")
+  labs("Partner Status") + 
+  wrap_x_labels  
+  
 ```
 
 
@@ -255,7 +307,9 @@ analysis_data$hh_partnered %>%
 
 analysis_data$hh_migration %>% 
   basic_plot() + 
-  labs(fill = "Migration Status")
+  labs(fill = "Migration Status") + 
+  wrap_x_labels + 
+  scale_fill_manual(values = c(color_palette(3), color_contrast_alt[2]))
 
 ```
 
@@ -265,7 +319,9 @@ analysis_data$hh_migration %>%
 analysis_data$hh_transportation_mode %>% 
   mutate(JWTR_label = str_remove(JWTR_label, "\\(.*\\)")) %>% 
   basic_plot() + 
-  labs(fill = "Mode of Transport")
+  labs(fill = "Mode of Transport") + 
+  wrap_x_labels + 
+  scale_fill_manual(values = c(color_palette(9), color_palette_light(9)))
 
 ```
 
@@ -273,9 +329,11 @@ analysis_data$hh_transportation_mode %>%
 
 ```{r}
 
-analysis_data$commute_bracket %>% 
+analysis_data$hh_commute_bracket %>% 
   basic_plot() + 
-  labs(fill = "Commute Time")
+  labs(fill = "Commute Time (minutes)") + 
+  wrap_x_labels + 
+  scale_fill_manual(values = c(color_contrast_alt[2], color_palette(9), color_palette_light(1)))
 
 
 

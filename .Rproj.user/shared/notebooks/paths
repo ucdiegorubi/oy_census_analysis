@@ -1,3 +1,7 @@
+/projects/diegocampos/cte/cte_ta/build_analytical_file/build_analytical_file.R="70D8726B"
+/projects/diegocampos/cte/cte_ta/functions/load_data_functions.R="AEB6F32D"
+/projects/diegocampos/cte/cte_ta/functions/process_cte_data.R="1E988898"
+/projects/diegocampos/cte/cte_ta/functions/process_seq_data.R="D69CB08F"
 /projects/diegocampos/oy_census/.gitignore="D8CF197A"
 /projects/diegocampos/oy_census/R/create_population_estimates.R="D9059DF8"
 /projects/diegocampos/oy_census/R/download_pums_data.R="9731C3CE"

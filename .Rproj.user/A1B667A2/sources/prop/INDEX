@@ -1,3 +1,7 @@
+%2Fprojects%2Fdiegocampos%2Fcte%2Fcte_ta%2Fbuild_analytical_file%2Fbuild_analytical_file.R="7D8B213F"
+%2Fprojects%2Fdiegocampos%2Fcte%2Fcte_ta%2Ffunctions%2Fload_data_functions.R="F136A8B0"
+%2Fprojects%2Fdiegocampos%2Fcte%2Fcte_ta%2Ffunctions%2Fprocess_cte_data.R="7CC60C36"
+%2Fprojects%2Fdiegocampos%2Fcte%2Fcte_ta%2Ffunctions%2Fprocess_seq_data.R="EE2C870C"
 %2Fprojects%2Fdiegocampos%2Foy_census%2F.gitignore="F0EFFD31"
 %2Fprojects%2Fdiegocampos%2Foy_census%2FR%2Fadd_indicator_variables.R="7FAE1200"
 %2Fprojects%2Fdiegocampos%2Foy_census%2FR%2Fcreate_population_estimates.R="E95CF2A1"

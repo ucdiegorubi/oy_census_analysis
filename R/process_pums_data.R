@@ -149,12 +149,12 @@ add_other_indicators <- function(pums_data){
     
     head_hh_oy <-
       case_when(
-        oy_flag == "opp_youth" & head_hh_flag == TRUE        ~ "Opportunity Youth - Head of Household", 
-        oy_flag == "opp_youth" & head_hh_flag == FALSE       ~ "Opportunity Youth - Non-Head of Household", 
-        oy_flag == "connected_youth" & head_hh_flag == TRUE  ~ "Connected Youth - Head of Household", 
-        oy_flag == "connected_youth" & head_hh_flag == FALSE ~ "Connected Youth - Non-Head of Household", 
-        oy_flag == "everyone_else"   & head_hh_flag == TRUE  ~ "Everyone Else - Head of Household", 
-        oy_flag == "everyone_else"   & head_hh_flag == FALSE ~ "Eveyrone Else - Non-Head of Household", 
+        oy_flag == "opp_youth" & head_hh_flag == TRUE        ~ "Opportunity Youth - HH", 
+        oy_flag == "opp_youth" & head_hh_flag == FALSE       ~ "Opportunity Youth - Non-HH", 
+        oy_flag == "connected_youth" & head_hh_flag == TRUE  ~ "Connected Youth - HH", 
+        oy_flag == "connected_youth" & head_hh_flag == FALSE ~ "Connected Youth - Non-HH", 
+        oy_flag == "everyone_else"   & head_hh_flag == TRUE  ~ "Everyone Else - HH", 
+        oy_flag == "everyone_else"   & head_hh_flag == FALSE ~ "Eveyrone Else - Non-HH", 
         TRUE ~ oy_flag
       )
     

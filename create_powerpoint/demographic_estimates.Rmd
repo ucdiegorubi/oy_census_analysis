@@ -408,11 +408,36 @@ analysis_data$oy_age_bracket %>%
 
 ```
 
+## Educational Attainment
+
+```{r}
+analysis_data$oy_edu_attainment %>% 
+  filter(oy_flag != "Everyone Else") %>% 
+  ggplot(aes(x = oy_flag, y = percent)) + 
+  geom_col(aes(fill = SCHL_label)) + 
+  theme_classic() + 
+  labs(
+    fill = "Educational Attainment", 
+    y = "Percent"
+  ) + 
+  erase_axis + 
+  theme(axis.title.x = element_blank()) + 
+  geom_text(aes(label = if_else(percent > .05, 
+                                scales::percent(percent, accuracy = .1), 
+                                ""), 
+                group = SCHL_label), 
+            position = position_stack(vjust = .5))
+
+
+
+
+```
+
 
 
 ## Race & Gender
 
-- Pending
+
 
 ```{r, eval = F}
 
