@@ -125,9 +125,14 @@ basic_plot <- function(data, fill_label = NULL){
     
 }
 
-single_plot <- function(data, x_col){
+single_plot <- function(data, x_col = NULL){
   
-  x_col =    names(data)[str_detect(names(data), "oy")] %>% rlang::sym()
+  if(is.null(x_col)){
+    x_col =    names(data)[str_detect(names(data), "oy")] %>% rlang::sym()
+  
+  }else{
+    x_col = rlang::sym(x_col)
+  }
   
   data %>% 
     ggplot(aes(x = !!x_col, y = percent)) + 
@@ -136,7 +141,7 @@ single_plot <- function(data, x_col){
     geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
                   width = .2) + 
     theme_classic() + 
-    geom_text(aes(label = format(percent, digits = 3)), 
+    geom_text(aes(label = scales::percent(percent, digits = 3)), 
               position = position_stack(vjust = .5)) + 
     # labs( y = "Average Number of Children") + 
     erase_x_legend + 
@@ -158,6 +163,19 @@ wrap_x_labels =
 * What are the household income characteristics of Opportunity Youth?
 * Mobility Status
 
+# Heads of Household
+
+```{r}
+analysis_data$head_of_household_alt %>% 
+  single_plot(x_col = 'oy_hh_flag') + 
+  wrap_x_labels + 
+  scale_y_continuous(labels = scales::percent) + 
+  labs(caption = "", 
+       y = "Percent") + 
+  erase_y_axis
+```
+
+
 # Do they have children?
 
 ```{r}
@@ -175,26 +193,40 @@ analysis_data$hh_children %>%
 
 # Number of Children
 
-```{r}
+```{r, eval = T}
 
 analysis_data$hh_num_children %>% 
-  single_plot() + 
-  labs(
-    y = "Average number of children"
-  ) + 
-  wrap_x_labels
+  filter(!str_detect(oy_hh_flag, 'Eve')) %>% 
+  
+  ggplot(aes(x = oy_hh_flag, y = percent)) + 
+  geom_col(color = 'black', 
+           fill = color_contrast[2]) + 
+  geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
+                width = .2) + 
+  theme_classic() + 
+  geom_text(aes(label = round(percent, digits = 2)), 
+            position = position_stack(vjust = .5)) + 
+  # labs( y = "Average Number of Children") + 
+  erase_x_legend + 
+  theme(axis.text.x = element_text(face = 'bold')) + 
+  labs(caption = "Cells representing less than 5% suppressed for clarity", 
+       y = 'Average number of children') + 
+  wrap_x_labels 
+  
 
 
 
 ```
 
 
-# Income Characteristics: Household Incomesingle_plot
+# Income Characteristics: Total Person's Income
 
 
 
 ```{r}
+
 analysis_data$hh_average_income %>% 
+  filter(!(str_detect(oy_hh_flag, "Eve"))) %>% 
   ggplot(aes(x = oy_hh_flag, y = percent)) + 
   geom_col(color = 'black', 
            fill = color_contrast[2]) + 
@@ -202,12 +234,13 @@ analysis_data$hh_average_income %>%
                 width = .2) + 
   theme_classic() + 
   geom_text(aes(label = scales::dollar(percent)), 
-            position = position_stack(vjust = .5)) + 
+            position = position_stack(vjust = .5), 
+            size = 3.7) + 
   # labs( y = "Average Number of Children") + 
   erase_x_legend + 
   theme(axis.text.x = element_text(face = 'bold')) + 
   labs(
-    y = "Average Total Income",
+    y = "Person's total income",
     caption = "Cells representing less than 5% suppressed for clarity"
   ) + 
   wrap_x_labels + 
@@ -216,10 +249,12 @@ analysis_data$hh_average_income %>%
 
 ```
 
+
+
+
+```{r, eval = F}
+
 # Income Characteristics: Income Bracket
-
-
-```{r}
 
 analysis_data$hh_income_bracket %>% 
   # filter(oy_flag != "Everyone Else") %>% 
@@ -265,7 +300,7 @@ analysis_data$hh_type %>%
 ```{r}
 analysis_data$hh_workers_in_fam %>% 
   basic_plot() + 
-  labs(fill = "Workers in Family") + 
+  labs(fill = "Number of workers in Family") + 
   wrap_x_labels + 
   scale_fill_manual(values = c(color_contrast_alt[2], color_palette_light(4)))
   
@@ -294,9 +329,35 @@ analysis_data$hh_married %>%
 ```{r}
 analysis_data$hh_partnered %>% 
   basic_plot() + 
-  labs("Partner Status") + 
+  labs(fill = "Partner Status") + 
   wrap_x_labels  
   
+```
+
+
+
+# Same-sex households
+
+```{r}
+analysis_data$hh_same_sex_married %>% 
+  basic_plot() + 
+  labs(fill = "Same-Sex Married Household") + 
+  wrap_x_labels
+
+```
+
+# Multi-generational Families
+
+```{r}
+
+analysis_data$hh_multigen %>% 
+  basic_plot() + 
+  labs(fill = "Multigenerational Family") + 
+  wrap_x_labels
+
+
+
+
 ```
 
 

@@ -51,6 +51,7 @@ pums_df <-
                 income_bracket,
                 commute_bracket,
                 oy_hh_flag,
+                head_hh_flag, 
 
                 contains('label')),  
       factor))
@@ -67,7 +68,8 @@ pums_survey <-
 analysis_data <- 
   list()
 
-# this will likely get huge at some point 
+# this will likely get huge at some point - 9/29/2020
+# it got huge 10/14/2020
 analysis_data$q1_demographics <- 
   list(
     
@@ -165,6 +167,7 @@ analysis_data$q2_household =
   set_names(nm = tabulate_dict$values)
 
 # variant that parses out the above by head of household
+# oy_hh_flag is the head of household for the various OY-groups
 analysis_data$q2_household = 
   append(analysis_data$q2_household, 
          
@@ -173,7 +176,44 @@ analysis_data$q2_household =
                .f = ~ create_estimate(pums_survey, oy_hh_flag, !!.x)) %>% 
            set_names(nm = paste0('hh_',tabulate_dict$values)))
 
-# Numeric point estimates
+# head of household overall
+analysis_data$q2_household$head_of_household = 
+  
+  create_estimate(pums_survey = pums_survey, oy_hh_flag)
+
+analysis_data$q2_household$head_of_household_alt = 
+  create_estimate(pums_survey = pums_survey, 
+                  oy_flag, oy_hh_flag)
+  
+
+analysis_data$q2_household$puma_head_of_household = 
+  
+  create_estimate(pums_survey = pums_survey, 
+                  PUMA, 
+                  oy_hh_flag)
+
+analysis_data$q2_household$geo_head_of_household_n = 
+  
+  process_map_data(data = analysis_data$q2_household$puma_head_of_household,
+                   names = 'oy_hh_flag',
+                   values = 'n') %>%
+  mutate(chi_puma = PUMACE10 %in% pums_df$PUMA[pums_df$chicago_puma_flag]) %>%
+  filter(chi_puma)
+
+analysis_data$q2_household$geo_head_of_household_percent = 
+  
+  process_map_data(data = analysis_data$q2_household$puma_head_of_household, 
+                   names = 'oy_hh_flag', 
+                   values = 'percent') %>% 
+  mutate(chi_puma = PUMACE10 %in% pums_df$PUMA[pums_df$chicago_puma_flag]) %>% 
+  filter(chi_puma)
+
+
+# NUMERIC ESTIMATES -------------------------------------------------------
+
+
+# can't use these within a survey_count() call, so I had to make a serparate function
+# as defined above
 numeric_cols <- 
   Dict::dict("adjusted_income" = "average_income", 
              'NOC' = "num_children", 
@@ -200,22 +240,6 @@ analysis_data$q2_household =
            set_names(nm = paste0('hh_',numeric_cols$values)))
 
 
-
-# analysis_data$q2_household$average_income = 
-#   pums_survey %>% 
-#   numeric_estimate(adjusted_income, oy_hh_flag)
-# 
-# analysis_data$q2_household$num_children = 
-#   pums_survey %>% 
-#   numeric_estimate(NOC, oy_hh_flag)
-# 
-# analysis_data$q2_household$num_children = 
-#   pums_survey %>% 
-#   numeric_estimate(NP, oy_hh_flag)
-# 
-# analysis_data$q2_household$travel_time_to_work = 
-#   pums_survey %>% 
-#   numeric_estimate(JWMNP, oy_flag)
 
 
 # SAVING DICTIONARIES -----------------------------------------------------

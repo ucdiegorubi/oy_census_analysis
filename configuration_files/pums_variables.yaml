@@ -110,6 +110,9 @@ PUMS_variables: [
   # number of own children in household
   NOC, 
   
+  # number of related children in household
+  NRC, 
+  
   # number of persons in family
   NPF, 
   
