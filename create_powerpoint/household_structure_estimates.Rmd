@@ -52,6 +52,7 @@ analysis_data <-
                 .at = 'oy_hh_flag', 
                 .f = figure_helpers$format_oy_hh_variable))
 
+analysis_data %>% map(.f = ~ .x %>% filter(across(everything(), ~ !str_detect(.x, "Everyone"))))
 
 
 
@@ -166,7 +167,8 @@ wrap_x_labels =
 # Heads of Household
 
 ```{r}
-analysis_data$head_of_household_alt %>% 
+analysis_data$head_of_household_alt %>%
+  filter(!str_detect(oy_hh_flag, "Eve")) %>% 
   single_plot(x_col = 'oy_hh_flag') + 
   wrap_x_labels + 
   scale_y_continuous(labels = scales::percent) + 

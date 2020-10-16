@@ -1,5 +1,5 @@
 {
-    "activeTab": -1,
+    "activeTab": 3,
     "activeTabSourceWindow1": 0,
     "activeTabSourceWindow2": 0,
     "activeTabSourceWindow3": 0,
@@ -19,5 +19,7 @@
     "activeTabSourceWindow17": 0,
     "activeTabSourceWindow18": 0,
     "activeTabSourceWindow19": 0,
-    "activeTabSourceWindow20": 0
+    "activeTabSourceWindow20": 0,
+    "activeTabSourceWindow21": 0,
+    "activeTabSourceWindow22": 0
 }

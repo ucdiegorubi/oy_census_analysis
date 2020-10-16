@@ -37,6 +37,26 @@ $(housing): $(VIZ)/household_structure_estimates.Rmd $(estimates)
 $(demographics): $(VIZ)/demographic_estimates.Rmd $(estimates)
 	$(R_version) -e "rmarkdown::render(here::here('create_powerpoint','demographic_estimates.Rmd'))"
 
+# shortcuts :)
+# download configuration_files
+
+get_data: 
+	make $(pums_data)
+	
+process:
+	make $(pums_processed)
+	
+estimate:
+	make $(estimates)
+	
+housing_viz:
+	make $(housing)
+	
+demo_viz:
+	make $(demographics)
+
+# DESTROY
+
 clean: 
 		rm -rf $(pums_data)
 		rm -rf $(CLEAN_DATA)

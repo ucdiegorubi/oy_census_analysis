@@ -116,6 +116,15 @@ PUMS_variables: [
   # number of persons in family
   NPF, 
   
+  # gave birth to child within past 12 months
+  FER,
+  
+  # Own child? Unclear what this means
+  OC,
+  
+  # Related Child 
+  RC,
+  
   # unmarried partner in household
   PARTNER, 
   

@@ -76,29 +76,29 @@ helper_functions$check_for_directory('raw_data')
 
 check_pums_variables()
 
-if(
-  file.exists(here::here('raw_data', 
-               'il_pums_data.csv')) == TRUE){
-  
-  message("Illinois PUMS dataset already exists.")
-  
-  pums_df <- load_data$load_pums_data()
+# if(
+#   file.exists(here::here('raw_data', 
+#                'il_pums_data.csv')) == TRUE){
+#   
+#   message("Illinois PUMS dataset already exists.")
+#   
+#   pums_df <- load_data$load_pums_data()
+# 
+# }else{
 
-}else{
-  
-  load_api_key()
-  
-  message("Illinois PUMS dataset does not exist. Downloading.")
-  
-  pums_df <- load_data$download_pums_data()
-  
-  write_csv(
-    x = pums_df, 
-    path = 
-      here::here('raw_data', 
-                 'il_pums_data.csv')
-  )
-}
+load_api_key()
+
+message("Illinois PUMS dataset does not exist. Downloading.")
+
+pums_df <- load_data$download_pums_data()
+
+write_csv(
+  x = pums_df, 
+  path = 
+    here::here('raw_data', 
+               'il_pums_data.csv')
+)
+
   
 
 
