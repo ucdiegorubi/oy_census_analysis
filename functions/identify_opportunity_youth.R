@@ -60,34 +60,8 @@ identify_opportunity_youth <- function(pums_data){
           
           if_else(
             
-            # # 2 = last worked over 1 - 5 years ago
-            # WKL == "2" |
-            #   
-            #   # Available for work
-            #   # 3 = No, other reasons
-            #   # 2 = No, temporarily ill
-            #   # 4 = No, unspecified 
-            #   NWAV %in% c("3", "2", "4")|
-            #   
-            #   # looking for work
-            #   # 2 = No
-            #   NWLK == "2" |
-            #   
-            #   # Worked last week
-            #   # 2 = did not work
-            #   WRK == "2"| 
-            #   
-            #   # Temporary Work Abscense
-            #   # 2 == No
-            #   NWAB == "2" | 
-            #   
-            #   # on layoff
-            #   # 2 == No
-            #   NWLA == "2",
-              
-              
             # employment status
-            # 3 == unemployed
+            # 3 == unemployed, 6 == "not in labor force"
             ESR %in% c( "3", "6"),
               
             
@@ -120,7 +94,7 @@ identify_opportunity_youth <- function(pums_data){
         school_flag =
           if_else(
             condition = 
-              # No, has not attended in the last 3 months
+              # 1 == No, has not attended in the last 3 months
               # This is the only variable indicating some type of 
               # school enrollment 
               SCH == "1",
@@ -177,19 +151,7 @@ identify_opportunity_youth <- function(pums_data){
             'connected_youth', 
             'everyone_else'
           )
-          # # young and simultaneously unemployed and not enrolled in school
-          # (youth_flag == TRUE & employment_flag == TRUE & school_flag == TRUE), 
-          # "opp_youth", 
-          # 
-          # # young but not unemployed or not in school
-          # if_else(
-          #   (youth_flag == TRUE & (employment_flag == FALSE | school_flag == FALSE)) |
-          #     (youth_flag == TRUE), 
-          #   
-          #   "non_oy_youth", 
-          #   
-          #   
-          #   "everyone_else"
+
           
         )
       

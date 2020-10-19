@@ -26,6 +26,17 @@ load_data <-
         readr::read_csv(file_path)
       
     }, 
+    load_ipums_data = function(){
+      
+      file_path = 
+        here::here('raw_data', 
+                   'il_ipums.csv')
+      
+      file = 
+        readr::read_csv(file_path)
+      
+      
+    }, 
     
     load_PUMA_crosswalk = function(){
       
