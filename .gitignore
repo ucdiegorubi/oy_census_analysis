@@ -1,2 +1,3 @@
-*.csv
+il_pums_data.csv
 .Rproj.user
+clean_data/
