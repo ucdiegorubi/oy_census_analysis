@@ -1,7 +1,11 @@
 
 load_data <- 
   list(
-    download_pums_data = function(){
+    download_pums_data = function(state_config = 'IL', 
+                                  year_config = '2018',  
+                                  survey_config = 'acs1',
+                                  recode_config = FALSE,
+                                  rep_weight_config = 'person'){
       
       # api_key = 
       #   get_api_key()
@@ -9,11 +13,11 @@ load_data <-
       tidycensus::get_pums(
         # key = api_key,
         variables = get_pums_variables(), 
-        state = 'IL', 
-        recode = TRUE, 
-        year = 2018, 
-        survey = 'acs1', 
-        rep_weights = 'person'
+        state = state_config,  
+        recode = recode_config, 
+        year = year_config, 
+        survey = survey_config,  
+        rep_weights = rep_weight_config
       )
     }, 
     load_pums_data = function(){
@@ -61,6 +65,19 @@ load_data <-
         readr::read_csv(file_path)
     }, 
     
+    load_clean_IPUMS = function(){
+      
+      file_path = 
+        here::here(
+          'clean_data', 
+          'il_IPUMS_data_clean.csv'
+        )
+      
+      file = 
+        readr::read_csv(file_path)
+      
+    }, 
+    
     load_population_estimates = function(){
       
       file_path = 
@@ -72,6 +89,18 @@ load_data <-
       file = 
         readr::read_rds(file_path)
       
+    }, 
+    
+    load_IPUMS_population_estimates = function(){
+      
+      file_path = 
+        here::here(
+          'analysis_data', 
+          'IPUMS_oy_population_estimates.RDS'
+        )
+      
+      file = 
+        readr::read_rds(file_path)
     }
     
   )

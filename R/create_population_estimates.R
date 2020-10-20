@@ -1,6 +1,8 @@
 # Diego Rubi
-# Take the PUMS dataset, now a survey object, and use it to generate
-# population estimates and standard errors for visualization later on
+# Purpose:
+# - generate population estimates, standard errors, and confidence intervals for 
+#   visualization later on
+# 
 
 source(
   here::here(
@@ -11,6 +13,13 @@ source(
 
 
 
+# FUNCTIONS ---------------------------------------------------------------
+
+# for a lot of these variables, we're interested in much of the same thing
+# counts 
+# and proportions
+# 
+# this is a wrapper around srvyr functions to generate those estimates
 create_estimate <- function(pums_survey, ...){
   
   pums_survey %>% 
@@ -22,6 +31,8 @@ create_estimate <- function(pums_survey, ...){
   
 }
 
+# for whatever reason, if I was trying to generate a point estimate on a numeric
+# variable, I couldn't use survey_total so I had to have this separate
 numeric_estimate <- function(pums_survey, count_col, ...){
   
   pums_survey %>% 
@@ -33,10 +44,12 @@ numeric_estimate <- function(pums_survey, count_col, ...){
 }
 
 # RUN ---------------------------------------------------------------
+message("Loading PUMS data")
 pums_df <- 
   load_data$load_clean_pums()
 
-# TEMP --------------------------------------------------------------------
+# PREPPING PUMS DATA -----------------------------------------------------------
+message("Prepping PUMS and creating survey object")
 
 pums_df <- 
   pums_df %>% 
@@ -65,6 +78,7 @@ pums_survey <-
 
 
 # CREATE DATA -------------------------------------------------------------
+message("Creating population estimates")
 analysis_data <- 
   list()
 
@@ -243,14 +257,14 @@ analysis_data$q2_household =
 
 
 # SAVING DICTIONARIES -----------------------------------------------------
-
+message("Saving dictionaries")
 analysis_data$q2_dictionary_qual = tabulate_dict
 analysis_data$q2_dictionary_numeric = numeric_cols
 
 
 
 # WRITE DATA --------------------------------------------------------------
-
+message("Writing analysis data")
 helper_functions$check_for_directory('analysis_data')
 
 

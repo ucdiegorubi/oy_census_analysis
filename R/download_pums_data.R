@@ -1,5 +1,10 @@
 # script to download PUMS data with variables of interest
-# library(here)
+# load libraries
+# load config
+
+
+# SETUP -------------------------------------------------------------------
+message("Loading Scripts and Config")
 
 source(
   here::here(
@@ -8,9 +13,13 @@ source(
   )
 )
 
-# SETUP -------------------------------------------------------------------
+pums_config <- helper_functions$load_configuration_file('pums_parameters.yaml')
 
 
+
+# FUNCTIONS ---------------------------------------------------------------
+
+message("Defining Functions")
 
 get_api_key <- function(){
   
@@ -48,7 +57,13 @@ check_pums_variables <- function(){
   pums_vars = get_pums_variables()
   
   # variables available in PUMS files through tidycensus
-  vars_available = tidycensus::pums_variables$var_code %>% unique()
+  vars_available = 
+    tidycensus::pums_variables %>% 
+    filter(
+      year == pums_config$year, 
+      survey == pums_config$survey) %>% 
+    pull(var_code) %>% 
+    unique()
   
   # which are in which?
   test <- pums_vars %in%  vars_available
@@ -70,27 +85,26 @@ check_pums_variables <- function(){
 
 # RUN FUNCTIONS -----------------------------------------------------------
 
-helper_functions$load_functions('load_data_functions.R')
+# helper_functions$load_functions('load_data_functions.R')
 
+# making sure raw data directory exists
+# kind of unnecessary now
 helper_functions$check_for_directory('raw_data')
 
+# making sure the variables in the variable config are actually part of the avaialble
+# variables based on tidycensus::pums_variables (a dataframe)
 check_pums_variables()
 
-# if(
-#   file.exists(here::here('raw_data', 
-#                'il_pums_data.csv')) == TRUE){
-#   
-#   message("Illinois PUMS dataset already exists.")
-#   
-#   pums_df <- load_data$load_pums_data()
-# 
-# }else{
-
+# this is really not the best way to do this
 load_api_key()
 
 message("Illinois PUMS dataset does not exist. Downloading.")
 
-pums_df <- load_data$download_pums_data()
+pums_df <- load_data$download_pums_data(state_config = pums_config$state, 
+                                        year_config = pums_config$year, 
+                                        survey_config = pums_config$survey,
+                                        recode_config = pums_config$recode,
+                                        rep_weight_config = pums_config$rep_weights)
 
 write_csv(
   x = pums_df, 

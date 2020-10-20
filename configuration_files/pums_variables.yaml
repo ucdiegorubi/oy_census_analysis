@@ -98,6 +98,15 @@ PUMS_variables: [
   # household income past 12 months
   HINCP, 
   
+  # Family income, past 12 months
+  FINCP, 
+  
+  # Medicaid, medical assistance, or any kind of government assistance application
+  HINS4,
+  
+  # public assistance income
+  PAP, 
+  
   #H household presence and age of own children
   HUPAOC, 
   

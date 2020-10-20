@@ -30,6 +30,9 @@ source(
 analysis_data <- 
   load_data$load_population_estimates()[['q2_household']]
 
+ipums_data <- 
+  load_data$load_IPUMS_population_estimates()
+
 
 
 
@@ -52,7 +55,8 @@ analysis_data <-
                 .at = 'oy_hh_flag', 
                 .f = figure_helpers$format_oy_hh_variable))
 
-analysis_data %>% map(.f = ~ .x %>% filter(across(everything(), ~ !str_detect(.x, "Everyone"))))
+analysis_data <- 
+  analysis_data %>% map(.f = ~ .x %>% filter(across(everything(), ~ !(str_detect(.x, "Every")))))
 
 
 
@@ -84,6 +88,9 @@ color_contrast <-
 
 color_contrast_alt <- color_contrast
 names(color_contrast_alt) <- NULL
+
+color_contrast_hh <- rep(color_contrast, 2)
+names(color_contrast_hh) <- c("Connected Youth - HH", "Connected Youth - Non-HH", "Opportunity Youth - HH", "Opportunity Youth - Non-HH" )
 
 color_palette <- 
   ggsci::pal_uchicago(palette = 'default')
@@ -182,8 +189,8 @@ analysis_data$head_of_household_alt %>%
 
 ```{r}
 
-analysis_data$hh_children %>% 
-  basic_plot() + 
+analysis_data$children %>% 
+  basic_plot_dodge() + 
   labs(fill = "Parental Status") + 
   wrap_x_labels + 
   scale_fill_manual(values = color_contrast_alt)
@@ -272,8 +279,8 @@ analysis_data$hh_income_bracket %>%
 
 
 ```{r}
-analysis_data$hh_food_stamps %>% 
-  basic_plot() + 
+analysis_data$food_stamps %>% 
+  basic_plot_dodge() + 
   labs(fill = "Food Stamp Recipient") + 
   wrap_x_labels + 
   scale_fill_manual(values = color_contrast_alt)
@@ -286,7 +293,7 @@ analysis_data$hh_food_stamps %>%
 ```{r}
 
 analysis_data$hh_type %>% 
-  basic_plot() + 
+  basic_plot_dodge() + 
   labs(fill = "Type of Household") + 
   scale_fill_manual(values = c(color_contrast[2], color_palette_light(8)))
   
@@ -300,8 +307,8 @@ analysis_data$hh_type %>%
 
 
 ```{r}
-analysis_data$hh_workers_in_fam %>% 
-  basic_plot() + 
+analysis_data$workers_in_fam %>% 
+  basic_plot_dodge() + 
   labs(fill = "Number of workers in Family") + 
   wrap_x_labels + 
   scale_fill_manual(values = c(color_contrast_alt[2], color_palette_light(4)))

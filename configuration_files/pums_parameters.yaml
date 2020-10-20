@@ -1,0 +1,26 @@
+# specify function parameters for tidycensus::get_pums()
+
+state:
+- IL
+
+# Year defaults to 2018
+# either the year of the ACS 1 year file or 
+# the end year of the ACS 5 year file
+year:
+- 2018
+
+# either acs1 (acs 1 year) or acs5 (acs 5 year)
+survey:
+- acs1
+
+# the type of replicate weights to return for calculating standard errors
+# either:
+#   person
+#   housing
+#   both
+rep_weights:
+- both
+
+recode:
+- TRUE
+
