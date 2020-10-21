@@ -30,6 +30,49 @@ figure_helpers <-
       
     }, 
     
+    format_education_variable = function(edu_attainment){
+      
+      
+      edu_attainment = 
+        
+        factor(
+          edu_attainment, 
+          levels = c("N/A (less than 3 years old)",
+                     "No schooling completed", 
+                     "Less than High School Diploma", 
+                     "Regular high school diploma",
+                     "GED or alternative credential", 
+                     "Some College", 
+                     "Associate's degree", 
+                     "Bachelor's degree",
+                     "Master's degree", 
+                     "Professional degree beyond a bachelor's degree", 
+                     "Doctorate degree"), 
+          ordered = TRUE)
+      
+      return(edu_attainment)
+      
+      
+    }, 
+    
+    format_oy_household = function(oy_household){
+      
+      oy_household <- 
+        case_when(
+          oy_household == 
+        )
+      
+      factor(
+        oy_household, 
+        levels = c("")
+      )
+      )
+      
+    }
+      
+      
+      
+    
     fig_help = 
       list(
         N = "N = ", 

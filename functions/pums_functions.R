@@ -1,4 +1,12 @@
+
+# CLEAN RACE VAR ----------------------------------------------------------
+
+
 recategorize_race <- function(pums_data){
+  
+  # goal is to separate out race from hispanic ethnicity
+  # HISP == 01 == "Not Spanich / Hispanic / Latino (Non-Hispanic)
+  # We ultimately use race_alternate as the variable we tabulate for race / ethnicity
   
   pums_data <- 
     
@@ -38,11 +46,27 @@ recategorize_race <- function(pums_data){
   
 }
 
+
+# ADD OTHER INDICATORS ----------------------------------------------------
+# CREATES 
+#   AGE BRACKETS
+#   IDENTIFIES PEOPLE WITH AT LEAST ONE CHILD (NO LONGER RELEVANT)
+#   adjusts income to constant dollars
+#   income brackets
+#   commute brackets
+#   identifies head of household
+#   collapses educational attainment to be less granular
+
+
+
 add_other_indicators <- function(pums_data){
   
   create_age_brackets <- function(age_variable){
     
     # 0 not captured for some reason
+    # Creating age brackets that reflect the age brackets of interest for OY
+    # we think of the whole bracket (16 - 24) but often break that up into two gruops
+    #   16 - 19, and then 20 - 24
     
     age_variable <- 
       cut(age_variable, 
@@ -63,6 +87,8 @@ add_other_indicators <- function(pums_data){
   
   alt_age_brackets <- function(age_variable){
     
+    # do not remember why we did this or whether or not we used this but 
+    # I know an alternative age bracket was asked for
     age_variable <- 
       cut(age_variable, 
           breaks = c(0, 15, 24, 50, 100), 
@@ -152,12 +178,12 @@ add_other_indicators <- function(pums_data){
   
   identify_head_of_household <- function(RELP){
     
-    # RELP = relationship variable 
+    # RELP = relationship variable  in PUMS
     # establishes a rows relationsihp with respect to the head of household
     # per IPUMS and consultation with ACS Data Users Group, 
-    # RELP == 00 referes to reference person, which in this case is 
+    # RELP == 00 refers to reference person, which in this case is 
     # the head of household in the PUMS survey
-    # ACS stopped refering to head of household as such in the 80's and now calls
+    # ACS stopped referring to head of household as such in the 80's and now calls
     # the survey respondent the reference person
     
     head_of_household <- 
@@ -170,6 +196,8 @@ add_other_indicators <- function(pums_data){
     
   }
   
+  # identifying heads of household within the 3 opportunity youth groups
+  # to parse out various population estimates conditional on head of household
   identify_hh_oy <- function(oy_flag, head_hh_flag){
     
     head_hh_oy <-
@@ -190,22 +218,105 @@ add_other_indicators <- function(pums_data){
     
   }
   
+# CLEAN EDUCATION VARIABLE ----   
+  clean_education_variable = function(SCHL){
+    
+    # clean up SCHL variable (educational attainment) as it has 
+    # way too many levels (grade 1, 2, etc)
+    
+    some_college = 
+      c("Some college, but less than 1 year", 
+        "1 or more years of college credit, no degree")
+    
+    no_hs_diploma = 
+      c(paste0("Grade ", 1:11), 
+        "12th grade - no diploma", 
+        "Nursery school, preschool", 
+        'Kindergarten')
+    
+    
+    SCHL <- 
+      case_when(
+        SCHL %in% some_college   ~ "Some College", 
+        SCHL %in% no_hs_diploma  ~ "Less than High School Diploma",
+        TRUE                   ~ SCHL
+      )
+    
+    
+    return(SCHL)
+    
+  }
+  
   # RUN FUNCTIONS
   pums_data <- 
     pums_data %>% 
-    mutate(age_bracket     = create_age_brackets(AGEP), 
-           alt_age_bracket = alt_age_brackets(AGEP), 
-           child_flag      = at_least_one_child(NOC), 
-           adjusted_income = income_constant_dollars(income_variable = PINCP, 
-                                                     adjustment_variable = ADJINC), 
-           income_bracket = create_income_brackets(adjusted_income), 
-           commute_bracket = create_commute_bracket(JWMNP), 
-           head_hh_flag = identify_head_of_household(RELP),
-           oy_hh_flag = identify_hh_oy(oy_flag, head_hh_flag))
+    mutate(age_bracket        = create_age_brackets(AGEP), 
+           alt_age_bracket    = alt_age_brackets(AGEP), 
+           child_flag         = at_least_one_child(NOC), 
+           adjusted_income    = income_constant_dollars(income_variable = PINCP, 
+                                                     adjustment_variable = ADJINC),
+           HINCP              = income_constant_dollars(HINCP, ADJINC),
+           income_bracket     = create_income_brackets(adjusted_income), 
+           commute_bracket    = create_commute_bracket(JWMNP), 
+           head_hh_flag       = identify_head_of_household(RELP),
+           oy_hh_flag         = identify_hh_oy(oy_flag, head_hh_flag), 
+           school_attainment  = clean_education_variable(SCHL_label))
   
   return(pums_data)
   
   
+  
+  
+}
+
+# categorize households into oy households and non-oy households and households
+# with both
+
+categorize_oy_households <- function(pums_data){
+  
+  spread_oy_flag <- function(){
+    
+    out <- 
+      pums_data %>% 
+      group_by(SERIALNO) %>% 
+      count(oy_flag) %>% 
+      pivot_wider(names_from = oy_flag, values_from = n)
+    
+    return(out)
+    
+  }
+  
+  generate_household_categories <- function(wide_data){
+    
+    wide_data <- 
+      
+      wide_data %>% 
+      mutate(
+        oy_household = 
+          case_when(
+            is.na(opp_youth)                            ~ "non_oy_household", 
+            !is.na(opp_youth) & !is.na(connected_youth) ~ "oy_cy_household",
+            !is.na(opp_youth) & is.na(connected_youth)  ~ "oy_household", 
+            is.na(opp_youth)  & !is.na(connected_youth) ~ "cy_household",
+            TRUE                                        ~ "else"))
+    
+    return(wide_data)
+    
+  }
+  
+  # Run Functions
+  wide_data <- spread_oy_flag()
+  wide_data <- generate_household_categories(wide_data = wide_data)
+  
+  # join the two together
+  pums_data <- 
+    pums_data %>% 
+    left_join(., 
+              y = wide_data,
+              by = 'SERIALNO')
+  
+  
+  return(pums_data)
   
   
 }

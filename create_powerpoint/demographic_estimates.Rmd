@@ -1,8 +1,10 @@
 ---
 title: "Opportunity Youth Population Estimates and Demographics (Preliminary)"
 author: "Diego Rubi"
-date: "9/22/2020"
-output: powerpoint_presentation
+date: " `r format(Sys.Date(),'%B %d, %Y')`"
+output: 
+  powerpoint_presentation:
+      reference_doc: reference_ppt.pptx
   
 ---
 
@@ -30,6 +32,9 @@ source(
 
 analysis_data <- 
   load_data$load_population_estimates()[['q1_demographics']]
+
+ipums_data <- 
+  load_data$load_IPUMS_population_estimates()
 
 ```
 
@@ -413,8 +418,9 @@ analysis_data$oy_age_bracket %>%
 ```{r}
 analysis_data$oy_edu_attainment %>% 
   filter(oy_flag != "Everyone Else") %>% 
+  mutate(school_attainment = figure_helpers$format_education_variable(school_attainment)) %>% 
   ggplot(aes(x = oy_flag, y = percent)) + 
-  geom_col(aes(fill = SCHL_label)) + 
+  geom_col(aes(fill = school_attainment)) + 
   theme_classic() + 
   labs(
     fill = "Educational Attainment", 
@@ -425,8 +431,10 @@ analysis_data$oy_edu_attainment %>%
   geom_text(aes(label = if_else(percent > .05, 
                                 scales::percent(percent, accuracy = .1), 
                                 ""), 
-                group = SCHL_label), 
+                group = school_attainment), 
             position = position_stack(vjust = .5))
+
+
 
 
 
@@ -548,7 +556,7 @@ analysis_data$oy_race_gender_alternate %>%
 
 
 
-```{r}
+```{r, eval = F}
 
 analysis_data$oy_race_gender_alternate %>% 
   filter(SEX_label != "Female") %>% 
@@ -565,22 +573,33 @@ analysis_data$oy_race_gender_alternate %>%
 
 
 
-## Population by PUMA
+## Population by PUMA with City of Chicago Overlay
 
 ```{r, eval = T}
+chicago_map <- 
+  MapChi::CAs %>% 
+  sf::st_as_sf()
 
 analysis_data$geo_puma_pop %>% 
   ggplot() + 
-  geom_sf(aes(fill = opp_youth)) + 
+  geom_sf(aes(fill = opp_youth), 
+          colour = NA) + 
+  geom_sf(data = chicago_map,
+          fill = NA,
+          color = alpha('black', .2),
+          inherit.aes = FALSE)+
+  
   geom_sf_text(label = 
                   analysis_data$geo_puma_pop$opp_youth, 
                size = 1.8) + 
-  theme_void() + 
+ 
+  theme_void() +
   scale_fill_gradient(low = "#fff7bc",
                       high = "#D5802B",
                       na.value = "white") + 
   labs(fill = 
          "Opportunity Youth Population")
+  
 
 
 

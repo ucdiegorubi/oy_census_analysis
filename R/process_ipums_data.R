@@ -21,7 +21,8 @@ ipums <- load_data$load_ipums_data()
 
 # RUN FUNCTIONS -----------------------------------------------------------
 
-ipums <- identify_oy_ipums(ipums_data = ipums)
+ipums <- ipums_processing$identify_oy_ipums(ipums_data = ipums)
+ipums <- ipums_processing$ipums_one_child(ipums_data = ipums)
 
 
 # WRITE -------------------------------------------------------------------

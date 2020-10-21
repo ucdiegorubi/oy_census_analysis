@@ -22,7 +22,8 @@ ipums <- load_data$load_clean_IPUMS()
 ipums <- 
   ipums %>% 
   mutate(oy_flag = factor(oy_flag), 
-         NCHILD = factor(NCHILD, ordered = TRUE))
+         NCHILD = factor(NCHILD, ordered = TRUE), 
+         at_least_one_child = factor(at_least_one_child))
 
 # per an issues page from the Minnesota Population Center
 # https://github.com/mnpopcenter/ipumsr/issues/50
@@ -49,7 +50,16 @@ analysis_data <-
       group_by(oy_flag, NCHILD) %>% 
       summarize(
         percent = survey_mean(vartype = c('se', 'ci'))
+      ), 
+    
+    at_least_one_child = 
+      ipums_survey %>% 
+      group_by(oy_flag, at_least_one_child) %>% 
+      summarize(
+        percent = survey_mean(vartype = c('se', 'ci')), 
+        n = survey_total(vartype = c("se", "ci"))
       )
+
     
   )
 

@@ -65,14 +65,29 @@ pums_df <-
                 commute_bracket,
                 oy_hh_flag,
                 head_hh_flag, 
+                school_attainment,
 
                 contains('label')),  
       factor))
 
+
+# CREATING SURVEY OBJECTS -------------------------------------------------
+
+## FOR PERSON-LEVEL ESTIMATES
 pums_survey <- 
   convert_to_survey(pums_data = pums_df) %>% 
   # to limit to city of Chicago PUMAs
   filter(chicago_puma_flag == TRUE)
+
+# FOR HOUSEHOLD-LEVEL ESTIMATES
+pums_hh_survey <-
+  pums_df %>%
+  filter(chicago_puma_flag) %>% 
+  distinct(FS_label, HHT_label, MULTG_label,WIF_label, oy_household, HINCP,.keep_all = TRUE) %>% 
+  to_survey(df = .,
+            type = 'housing',
+            class = 'srvyr',
+            design = 'rep_weights')
 
 
 
@@ -84,6 +99,11 @@ analysis_data <-
 
 # this will likely get huge at some point - 9/29/2020
 # it got huge 10/14/2020
+# All the variables in this section are person level estimates, so these tabulations
+# are valid since they use the person level weights to create standard error estimates 
+# and confidence intervals. For the set of housing questions below, not all variables 
+# are at the person level so the standard errors are incorrectly specified using the person
+# level weights. 
 analysis_data$q1_demographics <- 
   list(
     
@@ -131,7 +151,7 @@ analysis_data$q1_demographics <-
     
     oy_edu_attainment = 
       pums_survey %>% 
-      create_estimate(pums_survey = ., oy_flag, SCHL_label),
+      create_estimate(pums_survey = ., oy_flag, school_attainment),
     
     oy_race_gender_alternate = 
       pums_survey %>% 
@@ -148,64 +168,85 @@ analysis_data$q1_demographics$geo_puma_pop =
   filter(chi_puma)
 
 # HOUSEHOLD STRUCTURE QUESTION --------------------------------------------
+# I've noted which variables are housing level / person level. Unfortunately, I did not
+# specify the correct replicate weights (need housing) to generate standard erorrs 
+# for some of these variables, so the ones that are housing level will be incorrect 
+# estimates. We're not using that yet until I figure that out. 
 
 tabulate_dict <- 
   Dict::dict(
+    # housing level
     "PARTNER_label" = "partnered", 
+    # person level
     "SCHL_label"    = "edu_attained", 
-    "FS_label"      = "food_stamps",  
+    # housing level
+    "FS_label"      = "food_stamps", 
+    # housing level
     "MAR_label"     = "married", 
+    # housing level
     "HHL_label"     = "hh_language", 
+    # housing level
     "HHT_label"     = "hh_type", 
+    # person level
     "JWTR_label"    = "transportation_mode", 
+    # person level
     "MIG_label"     = "migration",   
+    # housing level
     "MULTG_label"   = 'multigen', 
+    # person level
     "income_bracket"= "income_bracket",
     # "NOC"           = "num_children",
     # "NP"            = "num_people",
+    # housing level
     "SSMC_label"    = 'same_sex_married', 
+    
+    # type of living quarters/ housing
     "TYPE_label"    = 'hh_type', 
-    "WIF_label"     = 'workers_in_fam', 
+    # housing level
+    "WIF_label"     = 'workers_in_fam',
+    # housing level
     "ESP_label"     = 'parental_employment', 
+    # housing level
     "child_flag"    = "children", 
+    # person level
     'commute_bracket' = "commute_bracket"
   )
 
 
-# original that is only concerned with the various OY groups 
+# original that is only concerned with the various OY groups
+# basically what I'm doing here is using the dictionary keys (which are column names in
+# pums_df) and passing them through to create_estimate. The columns are referenced 
+# in !!.x, so basically each estimate says that for each group in oy_flag, generate 
+# the total count / proportion of people in column PARTNER_label, SCHL_label, so on and
+# so forth. 
 analysis_data$q2_household = 
   
   rlang::syms(tabulate_dict$keys) %>% 
+  
   map(.x = ., 
       .f = ~ create_estimate(pums_survey,oy_flag, !!.x)) %>% 
   set_names(nm = tabulate_dict$values)
-
-# variant that parses out the above by head of household
-# oy_hh_flag is the head of household for the various OY-groups
-analysis_data$q2_household = 
-  append(analysis_data$q2_household, 
-         
-         rlang::syms(tabulate_dict$keys) %>% 
-           map(.x = ., 
-               .f = ~ create_estimate(pums_survey, oy_hh_flag, !!.x)) %>% 
-           set_names(nm = paste0('hh_',tabulate_dict$values)))
 
 # head of household overall
 analysis_data$q2_household$head_of_household = 
   
   create_estimate(pums_survey = pums_survey, oy_hh_flag)
 
+# for some reason it was not grouping by head of household to parse that out within
+# oy_flag groups, so i had to be explicit here
 analysis_data$q2_household$head_of_household_alt = 
   create_estimate(pums_survey = pums_survey, 
                   oy_flag, oy_hh_flag)
   
 
+# calculating the heads of household per PUMA to later join to a map
 analysis_data$q2_household$puma_head_of_household = 
   
   create_estimate(pums_survey = pums_survey, 
                   PUMA, 
                   oy_hh_flag)
 
+# auto join to a map
 analysis_data$q2_household$geo_head_of_household_n = 
   
   process_map_data(data = analysis_data$q2_household$puma_head_of_household,
@@ -214,6 +255,8 @@ analysis_data$q2_household$geo_head_of_household_n =
   mutate(chi_puma = PUMACE10 %in% pums_df$PUMA[pums_df$chicago_puma_flag]) %>%
   filter(chi_puma)
 
+# same thing, but with percentages / not sure if this is per capita for a PUMA though
+# so I'm not doing anything with this data just yet
 analysis_data$q2_household$geo_head_of_household_percent = 
   
   process_map_data(data = analysis_data$q2_household$puma_head_of_household, 
@@ -224,15 +267,21 @@ analysis_data$q2_household$geo_head_of_household_percent =
 
 
 # NUMERIC ESTIMATES -------------------------------------------------------
-
+# same thing, some of these are housing level, so ignore those estimaets. 
 
 # can't use these within a survey_count() call, so I had to make a serparate function
 # as defined above
 numeric_cols <- 
-  Dict::dict("adjusted_income" = "average_income", 
-             'NOC' = "num_children", 
-             'NP'= "number_of_people", 
-             "JWMNP" = "travel_time_to_work")
+  
+  Dict::dict(
+    # person level
+    "adjusted_income" = "average_income", 
+    # housing level
+    'NOC' = "num_children", 
+    # housing level
+    'NP'= "number_of_people", 
+    # person level
+    "JWMNP" = "travel_time_to_work")
 
 analysis_data$q2_household <- 
   append(analysis_data$q2_household, 
@@ -244,15 +293,15 @@ analysis_data$q2_household <-
                                      oy_flag)) %>% 
            set_names(nm = numeric_cols$values))
 
-analysis_data$q2_household = 
-  append(analysis_data$q2_household, 
-         rlang::syms(numeric_cols$keys) %>% 
-           map(.x = ., 
-               .f = ~ numeric_estimate(pums_survey = pums_survey, 
-                                       count_col = !!.x, 
-                                       oy_hh_flag)) %>% 
-           set_names(nm = paste0('hh_',numeric_cols$values)))
 
+# HOUSEHOLD ESTIMATES -----------------------------------------------------
+
+analysis_data$household_income_estimates <- 
+  pums_hh_survey %>% 
+  group_by(oy_household) %>% 
+  summarize(
+    percent = survey_mean(HINCP, vartype = c('se', 'ci'))
+  )
 
 
 

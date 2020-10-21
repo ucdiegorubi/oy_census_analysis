@@ -40,7 +40,7 @@ housing_viz = $(VIZ)/household_structure_estimates.pptx
 
 # our goal is to make all of these, so we're defining a variable called 'all' that 
 # is more or less a composition of all of the other variables
-all : $(pums_data) $(ipums_data) $(pums_processed) $(ipums_processed) $(estimates) $(ipums_estimates) $(demographics) $(housing)
+all : $(pums_data) $(ipums_data) $(pums_processed) $(ipums_processed) $(estimates) $(ipums_estimates) $(demographics_viz) $(housing_viz)
 
 ########
 ########
@@ -69,11 +69,11 @@ $(ipums_estimates): $(SCRIPTS)/create_IPUMS_estimates.R $(ipums_processed)
 	$(R_version) $(SCRIPTS)/create_IPUMS_estimates.R
 
 # creating visualizations for the demographic estimates (research question 1)
-$(demographics_viz): $(VIZ)/demographic_estimates.Rmd $(estimates)
+$(demographics_viz): $(VIZ)/demographic_estimates.Rmd $(estimates) $(ipums_estimates)
 	$(R_version) -e "rmarkdown::render(here::here('create_powerpoint','demographic_estimates.Rmd'))"
 
 # creating visualizations for the household structure questions (research question 2)
-$(housing_viz): $(VIZ)/household_structure_estimates.Rmd $(estimates)
+$(housing_viz): $(VIZ)/household_structure_estimates.Rmd $(estimates) $(ipums_estimates)
 	$(R_version) -e "rmarkdown::render(here::here('create_powerpoint','household_structure_estimates.Rmd'))"
 
 
@@ -105,7 +105,13 @@ visuals:
 # removes the downloaded PUMS file, the clean (processed PUMS and IPUMS data), and 
 # the population estimates
 
-clean: 
+clean_all: 
 		rm -rf $(pums_data)
 		rm -rf $(CLEAN_DATA)
 		rm -rf $(ANALYSIS_DATA)
+		rm -rf $(demographics_viz)
+		rm -rf $(housing_viz)
+		
+clean_viz:
+		rm -rf $(demographics_viz)
+		rm -rf $(housing_viz)

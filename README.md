@@ -123,7 +123,7 @@ Then run the RMarkdown scripts in the **create_powerpoint** folder to create the
 
 We identify Opportunity  Youth as those individuals between the ages of about 16 through 24 that are *concurrently* unemployed and not enrolled in school. Using the PUMS files, we can identify these individuals through the followign variables: 
 
-- **AGEP: Identifies age **
+- **AGEP: Identifies age**
 - **SCH: School enrollment**
     - 1 / No, has not attended in the last 3 months
 - **ESR: Employment status recode** 
