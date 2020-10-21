@@ -22,6 +22,7 @@ recategorize_race <- function(pums_data){
     pums_data %>% 
     mutate(
       race_alternate = 
+        
         case_when(
           RAC1P == "1" & HISP == "01" ~ "White Non-Hispanic", 
           RAC1P == "2" & HISP == "01" ~ "Black Non-Hispanic", 
@@ -99,9 +100,7 @@ add_other_indicators <- function(pums_data){
   
   create_income_brackets <- function(income_variable){
     
-    # based on US federal income tax brackets <- 
-    # 
-    income_variable <- 
+      income_variable <- 
       
       cut(x = income_variable, 
           breaks = c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000,10000000), 
@@ -125,7 +124,8 @@ add_other_indicators <- function(pums_data){
   
   create_commute_bracket <- function(commute_var){
     # breaking down the commute variable into brackets 
-    # arbitrarily deifned
+    # arbitrarily defined
+    # identifies commute to work
     
     commute_var <- 
       cut(commute_var, 
@@ -152,10 +152,13 @@ add_other_indicators <- function(pums_data){
   
   identify_head_of_household <- function(RELP){
     
-    # relationship variable 
+    # RELP = relationship variable 
+    # establishes a rows relationsihp with respect to the head of household
     # per IPUMS and consultation with ACS Data Users Group, 
     # RELP == 00 referes to reference person, which in this case is 
-    # the head of household in the survey
+    # the head of household in the PUMS survey
+    # ACS stopped refering to head of household as such in the 80's and now calls
+    # the survey respondent the reference person
     
     head_of_household <- 
       if_else(RELP == 0, 

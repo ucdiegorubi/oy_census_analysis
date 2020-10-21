@@ -27,27 +27,59 @@ Our file corresponds to the following:
 
 # File Structure (IPUMS)
 
-File structure for IPUMS data is the same. THe main differences are the variables are named differently and sometimes additional variables are added which help in analysis. 
+File structure for IPUMS data is the same. THe main differences are the variables are named differently and additional variables are added which help in analysis. 
+
+# Directory Structure:
+
+* raw_data: 
+    - contains a crosswalk between PUMA areas and various other geographic areas
+    - contains the raw PUMA download from the ACS
+    - contains the raw IPUMS download from IPUMS USA
+    
+* configuration_files:
+    - contains a few configuration files that contain your census API key, the variables from the PUMS files that we might be interested in, and parameters passed to the function that downloads the data
+    
+* functions:
+    - contains R scripts housing functions that used throughout the analysis. Many of these are functions for cleaning data or helper functions used for visualization.
+    
+* clean_data: 
+    - contains the processed PUMS and IPUMS files used to create population estimates
+    
+* analysis_data:
+    - contains population estimates made from the processed PUMS and IPUMS data
+
+* create_powerpoint:
+    - contains RMarkdowns and slide decks that visualize population estimates
+    
+* temp:
+    - contains random scripts related to random requests or random tasks throughout the analysis 
+
 
 # Relevant Documentation:
 
-## IPUMS files 
 [IPUMS website](https://usa.ipums.org/usa/)
 
-## PUMS files
+* Documentation for the IPUMS website
+* Generally your best bet is to go to google and type (variable name IPUMS) and you'll find the relevant documentation
+
+
 [PUMS documentation](https://www.census.gov/programs-surveys/acs/microdata/documentation.html)
 
-# Short README about PUMS data generally
+* Documentation for PUMS data from the Census
+
+
 [PUMS README](https://www2.census.gov/programs-surveys/acs/tech_docs/pums/ACS2018_PUMS_README.pdf?)
 
-# References questions referred to by variables and explanations of 
-# various definitions
+* Short document (about 30 pages) that talks about PUMS files and some general things that data users should know 
+
 [PUMS Subjects](https://www2.census.gov/programs-surveys/acs/tech_docs/pums/subjects_in_pums/2018_1yr_PUMS_Subjects.pdf)
 
-# Literal codebook
+* Subject definitions for variables in PUMS files. For example, one variable called _Number of Children(NOC)_ defines the 'number of own children' in a household. The subject definitions more or less explain how the Census thinks about 'own' and how this variable is defined with respect to the head of household.
+
+## Literal codebook
 [PUMS Data Dictionary](https://www2.census.gov/programs-surveys/acs/tech_docs/pums/data_dict/PUMS_Data_Dictionary_2018.pdf)
 
-
+* The literal codebook that lists all household and person level variables you can find in a PUMS file.
 
 # Important! Instructions for recreating this analysis. 
 
@@ -118,3 +150,4 @@ Most of these variables are straight forward. _AGEP_ is numeric and we are able 
         
 *10/20/2020*:
 - writing documentation for project. I really should have used this project log more often.
+- As of this writing this analysis would not work for any other state. We subset for Chicago PUMAs, and this step would fail in any other state as they do not contain PUMAS named "Chicago City". This needs to be made a parameter option.
