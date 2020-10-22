@@ -141,7 +141,7 @@ add_other_indicators <- function(pums_data){
                      "80-89",
                      "90-99", 
                      "100 +"), 
-          right = TRUE,
+          right = FALSE,
           include.lowest = TRUE, 
           ordered_result = TRUE)
     
