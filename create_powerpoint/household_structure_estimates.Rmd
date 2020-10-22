@@ -1,6 +1,6 @@
 ---
-title: "Household Structure (Preliminary)"
-author: "Diego Campos"
+title: "Opportunity Youth Household Structure (Preliminary)"
+author: "Diego Rubi"
 date: " `r format(Sys.Date(), '%B %d, %Y')`"
 output: 
   powerpoint_presentation:
@@ -30,7 +30,7 @@ source(
 ```{r load-data}
 
 analysis_data <- 
-  load_data$load_population_estimates()[c('q2_household', 'household_income_estimates')]
+  load_data$load_population_estimates()
 
 ipums_data <- 
   load_data$load_IPUMS_population_estimates()
@@ -41,19 +41,14 @@ ipums_data <-
 ```
 
 ```{r}
-
-
-analysis_data <-
-  map(
-    .x = analysis_data,
-    .f = ~
-      .x %>%
-      modify_at(.x = .,
-                .at = 'oy_flag',
-                .f = figure_helpers$format_oy_variable) %>%
-      modify_at(.x = .,
-                .at = 'oy_hh_flag',
-                .f = figure_helpers$format_oy_hh_variable))
+analysis_data$q1_demographics <- 
+  
+  map(analysis_data$q1_demographics, 
+      .f =  ~
+        .x %>% 
+        modify_at(.x = ., 
+                  .at = 'oy_flag', 
+                  .f = figure_helpers$format_oy_variable))
 
 analysis_data$q2_household <- 
   map(analysis_data$q2_household, 
@@ -62,6 +57,17 @@ analysis_data$q2_household <-
               modify_at(.x = .,
                 .at = 'oy_flag',
                 .f = figure_helpers$format_oy_variable))
+
+analysis_data[c("household_income_estimates", "household_type_percent", "household_type_count")] %<>%
+  map(.f = ~ 
+        .x %>% 
+        
+        mutate(oy_household = figure_helpers$format_oy_household(oy_household)))
+
+ipums_data %<>% 
+  map(.f = ~ 
+        .x %>% 
+        mutate(oy_flag = figure_helpers$format_oy_variable(oy_flag)))
 
 # analysis_data <- 
 #   analysis_data %>% map(.f = ~ .x %>% filter(across(everything(), ~ !(str_detect(.x, "Every")))))
@@ -151,32 +157,32 @@ single_plot <- function(data, x_col = NULL){
   data %>% 
     ggplot(aes(x = !!x_col, y = percent)) + 
     geom_col(color = 'black', 
-             fill = color_contrast[2]) + 
+             fill = color_contrast[2], 
+             width = .5) + 
     geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
                   width = .2) + 
     theme_classic() + 
-    geom_text(aes(label = scales::percent(percent, digits = 3)), 
-              position = position_stack(vjust = .5)) + 
-    # labs( y = "Average Number of Children") + 
+    # geom_text(aes(label = if_else(percent > .05, 
+    #                               scales::percent(percent, accuracy = .1), 
+    #                               ""))) + 
+    
     erase_x_legend + 
-    theme(axis.text.x = element_text(face = 'bold')) + 
-    labs(
-      caption = "Cells representing less than 5% suppressed for clarity"
-    )
+    theme(axis.text.x = element_text(face = 'bold'))
 }
 
 wrap_x_labels = 
   scale_x_discrete(labels = function(x) str_wrap(x,10))
 
-basic_plot_dodge <- function(data, fill_label = NULL){
+basic_plot_dodge <- function(data, fill_label = NULL, erase = TRUE){
   
   fill_col = names(data)[2] %>% rlang::sym()
   
   x_col =    names(data)[str_detect(names(data), "oy")] %>% rlang::sym()
   
+  out <-  
     data %>% 
     filter(!str_detect(!!x_col, '(Everyone)|(Eveyrone)')) %>% 
-    ggplot(aes(x = !!x_col, y = percent, fill = !!fill_col)) + 
+    ggplot(aes(x = !!x_col, y = percent, fill = !!fill_col, group = !!fill_col)) + 
     geom_col(color = 'black', 
              position = 'dodge') + 
     # geom_text(aes(label = scales::percent(percent, accuracy = .1),
@@ -189,61 +195,136 @@ basic_plot_dodge <- function(data, fill_label = NULL){
     #               position = position_dodge(1))+
     theme_classic() + 
     scale_y_continuous(labels = scales::percent) + 
+    theme(axis.text.x = element_text(face = 'bold')) +
+    erase_x_legend
+  
+  if(erase == TRUE){
+    out <-  out + erase_y_axis
+  }else{
+    out <-  out
+  }
     
-    erase_y_axis + 
-    erase_x_legend + 
-    theme(axis.text.x = element_text(face = 'bold')) + 
-    labs(
-      caption = "Cells representing less than 5% suppressed for clarity") 
+    # erase_y_axis + 
+    # erase_x_legend + 
+    # theme(axis.text.x = element_text(face = 'bold'))
     # scale_fill_manual(values = color_contrast_hh)
   
-  
+  return(out)
 }
 
 
 ```
 
-# Research Questions of Interest
+### Data Sources:
+
+- [IPUMS USA](https://usa.ipums.org/usa/)
+    - IPUMS at the University of Minnesota
+    - IPUMS pre-processes PUMS files to enable / facilitate research 
+        - Example: NOC (U.S. Census) vs. NCHILD (IPUMS) are at household level and individual level respectively
+- [U.S. Census Bureau](https://www.census.gov/programs-surveys/acs/microdata.html)
+    - Raw PUMS files directly from the U.S. Census Bureau
+
+### Research Questions of Interest
 
 * Are Opportunity Youth caring for children?
+  - At least one child
+  - Number of children 
 * What are the household income characteristics of Opportunity Youth?
+  - Household income by household type
+  - Total personal income
 * Mobility Status
+  - Migration, mode of transportation, and average commute time
+* Pending
+  - Food Stamps Recipients, Household Types, Number of Workers in Family, Same-Sex Households, Multi-generational Families
+  
+# Results
 
-# Heads of Household
+### Refresher: Number of Opportunity Youth
 
 ```{r}
+ss <- analysis_data$q1_demographics$total_oy_population %>% 
+  select(oy_flag, n) %>% 
+  spread(oy_flag, n) %>% 
+  unlist()
+
+analysis_data$q1_demographics$total_oy_population %>% 
+  single_plot() + 
+  scale_x_discrete(labels = function(x) paste0(x, figure_helpers$fig_help$newline, 
+                                               figure_helpers$fig_help$N, 
+                                               ss %>% format(big.mark = ','))) + 
+  labs(y = "Percent", 
+       caption = paste0(figure_helpers$citations['PUMS'], 
+                        figure_helpers$fig_help$newline)) + 
+  scale_y_continuous(labels = scales::percent, limits = c(0,1))
+
+
+```
+
+
+
+### Heads of Household
+
+
+```{r}
+ss <- analysis_data$q2_household$head_of_household_alt %>% group_by(oy_hh_flag) %>% summarize(n = sum(n)) %>% spread(oy_hh_flag, n) %>% unlist()
+
 analysis_data$q2_household$head_of_household_alt %>%
   filter(!str_detect(oy_hh_flag, "Eve")) %>% 
   single_plot(x_col = 'oy_hh_flag') + 
   wrap_x_labels + 
-  scale_y_continuous(labels = scales::percent) + 
-  labs(caption = "", 
+  scale_y_continuous(labels = scales::percent, limits = c(0,1)) + 
+  labs(caption = figure_helpers$citations['PUMS'], 
        y = "Percent") + 
-  erase_y_axis
+  scale_x_discrete(labels = function(x) paste0(x, 
+                                               figure_helpers$fig_help$newline, 
+                                               figure_helpers$fig_help$N,
+                                               (ss[-c(3:4)]) %>% format(big.mark = ',')))
 ```
 
 
-# Do they have children?
+### Do they have children?
 
 ```{r}
 # children are now individual level so I can say, does a given individual have at least one child?
 
 ipums_data$at_least_one_child %>% 
-  basic_plot_dodge() + 
-  geom_errorbar(aes(ymin = percent, ymax = percent_upp,
+  basic_plot_dodge(erase = F) + 
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp,
                     group = at_least_one_child),
-                width = .5,
+                width = .2,
                 position = position_dodge(.9))+
   labs(fill = "Parental Status") + 
+  # geom_text(
+  #   aes(label = scales::percent(percent), 
+  #       group = at_least_one_child), 
+  #   position = position_dodge(width = .9), 
+  #   vjust = 1.2, 
+  #   size = 3.8
+  # ) + 
   wrap_x_labels + 
-  scale_fill_manual(values = color_contrast_alt)
+  scale_fill_manual(values = color_contrast_alt) + 
+  labs(
+    caption = figure_helpers$citations['IPUMS'], 
+    y = "Percent"
+  ) + 
+  geom_text(
+    aes(label = 
+          if_else(percent > .05, 
+                  scales::percent(percent, accuracy = .1),
+                  ""),
+        group = at_least_one_child), 
+    position = position_dodge(width = .9), 
+    size = 4, 
+    color = 'black', 
+    vjust = 1.5
+  )
   
 
 
 
 ```
 
-# Number of Children
+### Number of Children
 
 ```{r, eval = T}
 
@@ -267,19 +348,72 @@ ipums_data$at_least_one_child %>%
   
 ipums_data$percent_children %>% 
   filter(oy_flag != "everyone_else") %>% 
-  basic_plot_dodge() + 
+  basic_plot_dodge(erase = FALSE) + 
   geom_errorbar(aes(ymin = percent, ymax = percent_upp,
                     group = NCHILD),
                 width = .5,
-                position = position_dodge(.9))
+                position = position_dodge(.9)) + 
+  # geom_text(aes(label = scales::percent(percent, accuracy = .1), 
+  #               group = NCHILD), 
+  #           position = position_dodge(width = .9)) + 
+  labs(
+    caption = paste0(figure_helpers$citations['IPUMS'], 
+                     figure_helpers$fig_help$newline, 
+                     figure_helpers$suppress), 
+    fill = "Number of Children", 
+    y = "Percent"
+  ) + 
+  geom_text(
+    aes(label = 
+          if_else(percent > .05, 
+                  scales::percent(percent, accuracy = .1),
+                  ""),
+        group = NCHILD), 
+    position = position_dodge(width = .9), 
+    size = 4, 
+    color = 'white', 
+    vjust = 1.4
+  ) + 
+  ggsci::scale_fill_uchicago(palette = 'default')
 
 
 
 ```
 
-# Income Characteristics: Household Income
+### Type of Household
 
 ```{r}
+ss <- 
+  analysis_data$household_type_count %>% 
+  select(oy_household, n) %>%
+  mutate(label = paste0(oy_household, "\n", "N = ", n %>% format(big.mark = ','))) %>%
+  select(oy_household, label) %>% 
+  spread(oy_household, label)
+
+analysis_data$household_type_percent %>% 
+  # mutate(oy_household = figure_helpers$format_oy_household(oy_household)) %>% 
+  single_plot() +
+  geom_text(aes(label = if_else(percent > .05,
+                                scales::percent(percent, accuracy = .1),
+                                "")),
+            vjust = 1.5)+
+  scale_y_continuous(labels = scales::percent) + 
+  labs(y = "Percent", 
+       caption = paste0(figure_helpers$citations['PUMS'], 
+                        figure_helpers$fig_help$newline, 
+                        figure_helpers$suppress)) + 
+  scale_x_discrete(labels = ss)
+```
+
+
+
+
+
+
+### Income Characteristics: Household Income
+
+```{r}
+  
 
 analysis_data$household_income_estimates %>% 
   ggplot(aes(x = oy_household, y = percent)) + 
@@ -294,9 +428,9 @@ analysis_data$household_income_estimates %>%
   erase_x_legend + 
   theme(axis.text.x = element_text(face = 'bold')) + 
   labs(
-    caption = "Cells representing less than 5% suppressed for clarity", 
+    caption = figure_helpers$citations['PUMS'], 
     y = "Household Income") + 
-  scale_y_continuous(labels = scales::dollar)
+  scale_y_continuous(labels = scales::dollar) 
 
 
 ```
@@ -304,7 +438,7 @@ analysis_data$household_income_estimates %>%
 
 
 
-# Income Characteristics: Total Personal Income
+### Income Characteristics: Total Personal Income
 
 
 ```{r}
@@ -325,10 +459,10 @@ analysis_data$q2_household$average_income %>%
   theme(axis.text.x = element_text(face = 'bold')) + 
   labs(
     y = "Total Personal Income",
-    caption = "Cells representing less than 5% suppressed for clarity"
+    caption = figure_helpers$citations['PUMS']
   ) + 
   wrap_x_labels + 
-  scale_y_continuous(labels = scales::dollar)
+  scale_y_continuous(labels = scales::dollar, limits = c(0,15000)) 
 
 
   
@@ -353,21 +487,163 @@ analysis_data$hh_income_bracket %>%
 
 ```
 
-# Income Characteristics: Food Stamps (Pending)
 
+
+### Marital Status / Partnered
+```{r}
+
+# person level
+analysis_data$q2_household$married %>% 
+  basic_plot_dodge(erase = F) + 
+  labs(fill = "Marital Status", 
+       caption = figure_helpers$citations['PUMS'], 
+       y = "Percent") + 
+  wrap_x_labels  + 
+  scale_fill_manual(values = c(color_contrast_alt[2], rev(color_palette(5)))) + 
+  geom_errorbar(aes(ymin = percent, ymax = percent_upp,
+                    group = MAR_label),
+                width = .5,
+                position = position_dodge(.9)) + 
+  geom_text(
+    aes(label = 
+          if_else(percent > .05, 
+                  scales::percent(percent, accuracy = .1),
+                  ""),
+        group = MAR_label), 
+    position = position_dodge(width = .9), 
+    size = 4, 
+    color = 'black', 
+    vjust = 1.4
+  )
+  
+
+
+
+```
+
+### Partnered
+
+```{r}
+# person level
+analysis_data$q2_household$partnered %>% 
+  basic_plot_dodge(erase = F) + 
+  geom_errorbar(aes(ymin = percent, ymax = percent_upp,
+                    group = PARTNER_label),
+                width = .5,
+                position = position_dodge(.9)) + 
+  labs(fill = "Partner Status", 
+       caption = figure_helpers$citations['PUMS'], 
+       y = "Percent") + 
+  wrap_x_labels  + 
+  ggsci::scale_fill_uchicago() + 
+  geom_text(
+    aes(label = 
+          if_else(percent > .05, 
+                  scales::percent(percent, accuracy = .1),
+                  ""),
+        group = PARTNER_label), 
+    position = position_dodge(width = .9), 
+    size = 3, 
+    color = 'black', 
+    vjust = 1.4
+  )
+  
+```
+
+
+
+
+### Mobility: Migration
+
+```{r}
+
+# person level
+analysis_data$q2_household$migration %>% 
+  basic_plot_dodge(erase = F) + 
+  labs(fill = "Migration Status", 
+       caption = paste0(figure_helpers$citations['PUMS'], 
+                        figure_helpers$fig_help$newline,
+                        figure_helpers$suppress), 
+       y = "Percent") + 
+  wrap_x_labels + 
+  scale_fill_manual(values = c(color_palette(3), color_contrast_alt[2])) + 
+  geom_errorbar(aes(ymin = percent, ymax = percent_upp), 
+                position = position_dodge(width = .9),
+                width = .3) + 
+  geom_text(
+    aes(label = 
+          if_else(percent > .05, 
+                  scales::percent(percent, accuracy = .1),
+                  ""),
+        group = MIG_label), 
+    position = position_dodge(width = .9), 
+    size = 4, 
+    color = 'white', 
+    vjust = 1.4
+  )
+
+```
+
+### Mobility: Mode of Transportation
+```{r}
+# Person level
+analysis_data$q2_household$transportation_mode %>% 
+  mutate(JWTR_label = str_remove(JWTR_label, "\\(.*\\)")) %>% 
+  basic_plot_dodge(erase = F) + 
+  labs(fill = "Mode of Transport", 
+       caption = figure_helpers$citations['PUMS'], 
+       y = "Percent") + 
+  wrap_x_labels + 
+  geom_errorbar(aes(ymin = percent, ymax = percent_upp), 
+                position = position_dodge(width = .9),
+                width = .3) + 
+  scale_fill_manual(values = c(color_palette(9), color_palette_light(9)))
+
+```
+
+### Migration: Average Commute Time
+
+```{r}
+
+# mode of transportation
+# person level 
+analysis_data$q2_household$commute_bracket %>% 
+  mutate(commute_bracket = forcats::fct_relevel(commute_bracket, "100 +", after = 11)) %>% 
+  basic_plot_dodge(erase = F) +
+  labs(fill = "Commute Time (minutes)", 
+       caption = figure_helpers$citations['PUMS'], 
+       y = "Percent") + 
+  wrap_x_labels + 
+  geom_errorbar(aes(ymin = percent, ymax = percent_upp),
+                position = position_dodge(width = .9),
+                width = .3) + 
+  scale_fill_viridis(discrete = TRUE)
+
+
+
+```
+
+
+
+# Pending Analyses
+
+### Income Characteristics: Food Stamps (Pending)
 
 ```{r, eval = F}
 # household level
 analysis_data$food_stamps %>% 
   basic_plot_dodge() + 
-  labs(fill = "Food Stamp Recipient") + 
+  labs(fill = "Food Stamp Recipient", 
+       caption = figure_helpers$citations['PUMS']) + 
   wrap_x_labels + 
   scale_fill_manual(values = color_contrast_alt)
 
 
 ```
 
-# Household Type:(Pending)
+
+
+### Household Type:(Pending)
 
 ```{r, eval = F}
 # household level
@@ -382,7 +658,8 @@ analysis_data$hh_type %>%
 ```
 
 
-# Household Characteristics: Workers in Family (Pending)
+
+### Household Characteristics: Workers in Family (Pending)
 
 
 ```{r, eval = F}
@@ -400,43 +677,8 @@ analysis_data$workers_in_fam %>%
 
 
 
-# Marital Status / Partnered
-```{r}
 
-# person level
-analysis_data$q2_household$married %>% 
-  basic_plot_dodge() + 
-  labs(fill = "Marital Status") + 
-  wrap_x_labels  + 
-  scale_fill_manual(values = c(color_contrast_alt[2], rev(color_palette(5)))) + 
-  geom_errorbar(aes(ymin = percent, ymax = percent_upp,
-                    group = MAR_label),
-                width = .5,
-                position = position_dodge(.9))
-  
-
-
-
-```
-
-# Partnered
-
-```{r}
-# person level
-analysis_data$q2_household$partnered %>% 
-  basic_plot_dodge() + 
-  geom_errorbar(aes(ymin = percent, ymax = percent_upp,
-                    group = PARTNER_label),
-                width = .5,
-                position = position_dodge(.9)) + 
-  labs(fill = "Partner Status") + 
-  wrap_x_labels  
-  
-```
-
-
-
-# Same-sex households (Pending)
+### Same-sex households (Pending)
 
 ```{r, eval = F}
 
@@ -448,7 +690,7 @@ analysis_data$same_sex_married %>%
 
 ```
 
-# Multi-generational Families (Pending)
+### Multi-generational Families (Pending)
 
 ```{r, eval = F}
 
@@ -465,48 +707,9 @@ analysis_data$multigen %>%
 
 
 
-# Mobility: Migration
 
-```{r}
+# Questions?
 
-# person level
-analysis_data$q2_household$migration %>% 
-  basic_plot_dodge() + 
-  labs(fill = "Migration Status") + 
-  wrap_x_labels + 
-  scale_fill_manual(values = c(color_palette(3), color_contrast_alt[2]))
-
-```
-
-# Mobility: Mode of Transportation
-```{r}
-# Person level
-analysis_data$q2_household$transportation_mode %>% 
-  mutate(JWTR_label = str_remove(JWTR_label, "\\(.*\\)")) %>% 
-  basic_plot_dodge() + 
-  labs(fill = "Mode of Transport") + 
-  wrap_x_labels + 
-  scale_fill_manual(values = c(color_palette(9), color_palette_light(9)))
-
-```
-
-# Migration: Average Commute Time
-
-```{r}
-
-# mode of transportation
-# person level 
-analysis_data$q2_household$commute_bracket %>% 
-  basic_plot_dodge() + 
-  labs(fill = "Commute Time (minutes)") + 
-  wrap_x_labels + 
-  scale_fill_manual(values = c(color_contrast_alt[2], color_palette(9), color_palette_light(1)))
-
-
-
-```
-
-
-
+# Thank you!
 
 

@@ -57,18 +57,28 @@ figure_helpers <-
     
     format_oy_household = function(oy_household){
       
+      households <- 
+        c("Non-OY Household", 
+          "OY & CY Household", 
+          "OY Household")
+      
       oy_household <- 
         case_when(
-          oy_household == 
+          oy_household == "non_oy_household" ~ households[1], 
+          oy_household == "oy_cy_household"  ~ households[2], 
+          oy_household == "oy_household"     ~ households[3], 
         )
       
-      factor(
-        oy_household, 
-        levels = c("")
-      )
-      )
+      oy_household <-  
+        factor(
+          oy_household, 
+          levels = c(households[1], 
+                     households[2], 
+                     households[3]), 
+          ordered = TRUE)
       
-    }
+      return(oy_household)
+    }, 
       
       
       
@@ -82,7 +92,12 @@ figure_helpers <-
     
     x_axis = "Opportunity Youth Grouping", 
     y_percent = "Percent", 
-    y_count   = "Population Estimate"
+    y_count   = "Population Estimate", 
+    
+    citations = 
+      c(IPUMS = "Source: IPUMS USA, University of Minnesota, www.ipums.org.", 
+        PUMS  = "Source: U.S. Census Bureau, 2018 American Community Survey 1-Year Estimates"), 
+    suppress = "Percentages less than 5% suppressed for clarity"
     
       
   )

@@ -66,6 +66,7 @@ pums_df <-
                 oy_hh_flag,
                 head_hh_flag, 
                 school_attainment,
+                oy_household,
 
                 contains('label')),  
       factor))
@@ -302,6 +303,17 @@ analysis_data$household_income_estimates <-
   summarize(
     percent = survey_mean(HINCP, vartype = c('se', 'ci'))
   )
+
+analysis_data$household_type_percent <- 
+  pums_hh_survey %>% 
+  group_by(oy_household) %>% 
+  summarize(
+    percent = survey_mean(vartype = c('se', 'ci')))
+
+analysis_data$household_type_count <- 
+  pums_hh_survey %>% 
+  group_by(oy_household) %>% 
+  survey_count(vartype = c('se', 'ci'))
 
 
 
