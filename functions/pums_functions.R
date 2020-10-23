@@ -294,15 +294,99 @@ categorize_oy_households <- function(pums_data){
       wide_data %>% 
       mutate(
         oy_household = 
+          # there are potentially 8 kinds of households
+          # depending on existence of at least one everyone_else, 
+          # one opp_youth, one connected youth
+          # 2 ^ 3 = 8, but all people are categorized so the house
+          # with none does not exist
           case_when(
+            # oy_only
+            # !is.na(opp_youth) & 
+            #   is.na(connected_youth) & 
+            #   is.na(everyone_else)                      ~"OY Only Household", 
+            #   
+            # oy cy only - keep
+            !is.na(opp_youth) & 
+              !is.na(connected_youth) & 
+              is.na(everyone_else)                      ~ "OY-CY Only Household", 
+            
+            # # oy ee only
+            # !is.na(opp_youth) & 
+            #   is.na(connected_youth) & 
+            #   !is.na(everyone_else)                     ~ "OY-EE Only Household", 
+            
+            # Connected Youth Only - keep
             !is.na(connected_youth) & 
               is.na(opp_youth) & 
-              is.na(everyone_else)                      ~ "cy_only_household",
-            is.na(opp_youth)                            ~ "non_oy_household", 
-            !is.na(opp_youth) & !is.na(connected_youth) ~ "oy_cy_household",
-            !is.na(opp_youth) & is.na(connected_youth)  ~ "oy_household", 
-            is.na(opp_youth)  & !is.na(connected_youth) ~ "cy_household",
-            TRUE                                        ~ "else"))
+              is.na(everyone_else)                      ~ "CY Only Household",
+            
+            # Connected Youth w/ EE - keep
+            is.na(opp_youth) & 
+              !is.na(connected_youth) & 
+              !is.na(everyone_else)                     ~ "CY EE Only Household", 
+            
+            # everyone_else only- keep
+            !is.na(everyone_else) & 
+              is.na(connected_youth) & 
+              is.na(opp_youth)                          ~ "EE Only Household", 
+            
+            
+            TRUE                                        ~ "OY Household")) %>% 
+      select(SERIALNO, oy_household)
+    
+    return(wide_data)
+    
+  }
+  
+  generate_complete_household_categories <- function(wide_data){
+    
+    wide_data <- 
+      
+      wide_data %>% 
+      mutate(
+        oy_household_full = 
+          # there are potentially 8 kinds of households
+          # depending on existence of at least one everyone_else, 
+          # one opp_youth, one connected youth
+          # 2 ^ 3 = 8, but all people are categorized so the house
+          # with none does not exist
+          case_when(
+            # oy_only
+            !is.na(opp_youth) &
+              is.na(connected_youth) &
+              is.na(everyone_else)                      ~"OY Only Household",
+            #   
+            # oy cy only - keep
+            !is.na(opp_youth) & 
+              !is.na(connected_youth) & 
+              is.na(everyone_else)                      ~ "OY-CY Only Household", 
+            
+            # oy ee only
+            !is.na(opp_youth) &
+              is.na(connected_youth) &
+              !is.na(everyone_else)                     ~ "OY-EE Only Household",
+            
+            # Connected Youth Only - keep
+            !is.na(connected_youth) & 
+              is.na(opp_youth) & 
+              is.na(everyone_else)                      ~ "CY Only Household",
+            
+            # Connected Youth w/ EE - keep
+            is.na(opp_youth) & 
+              !is.na(connected_youth) & 
+              !is.na(everyone_else)                     ~ "CY-EE Only Household", 
+            
+            # everyone_else only- keep
+            !is.na(everyone_else) & 
+              is.na(connected_youth) & 
+              is.na(opp_youth)                          ~ "EE Only Household", 
+            
+            # Non-oy Household
+            !is.na(opp_youth)                           ~ "Combined Household",
+            
+            
+            TRUE                                        ~ "Other Household")) %>% 
+      select(SERIALNO, oy_household_full)
     
     return(wide_data)
     
@@ -312,20 +396,23 @@ categorize_oy_households <- function(pums_data){
   message("Tabulating Person-type per household")
   wide_data <- spread_oy_flag()
   message("Categorizing households")
-  wide_data <- generate_household_categories(wide_data = wide_data)
   
-  return(wide_data)
+  short <- generate_household_categories(wide_data = wide_data)
+  full <- generate_complete_household_categories(wide_data = wide_data)
   
-  # # join the two together
-  # pums_data <- 
-  #   pums_data %>% 
-  #   left_join(., 
-  #             y = wide_data,
-  #             by = 'SERIALNO')
-  # 
-  # 
-  # return(pums_data)
+  # join the two together
+  message("Joining Data")
+  pums_data <-
+    pums_data %>%
+    left_join(.,
+              y = short,
+              by = 'SERIALNO') %>%
+    left_join(.,
+              y = full,
+              by = 'SERIALNO')
   
+  
+  return(pums_data)
   
 }
 

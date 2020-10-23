@@ -62,7 +62,7 @@ analysis_data[c("household_income_estimates", "household_type_percent", "househo
   map(.f = ~ 
         .x %>% 
         
-        mutate(oy_household = figure_helpers$format_oy_household(oy_household)))
+        mutate(oy_household = figure_helpers$format_oy_household(oy_household_full)))
 
 ipums_data %<>% 
   map(.f = ~ 
@@ -227,14 +227,16 @@ basic_plot_dodge <- function(data, fill_label = NULL, erase = TRUE){
 ### Research Questions of Interest
 
 * Are Opportunity Youth caring for children?
-  - At least one child
-  - Number of children 
+  - How many Opportunity Youth have at least one child?
+  - How many children do Opportunity Youth have?
 * What are the household income characteristics of Opportunity Youth?
-  - Household income by household type
-  - Total personal income
+  - What is average household income by household type?
+  - What is an Opportunity Youth's average total personal income?
 * What are the mobility characteristics of Opportunity Youth?
-  - Migration, mode of transportation, and average commute time
-* Pending
+  - Have Opportunity Youth moved within the last year?
+  - What are Connected Youths' primary form of transportation?
+  - What are Connected Youths' average commute time?
+* Pending:
   - Food Stamps Recipients, Household Types, Number of Workers in Family, Same-Sex Households, Multi-generational Families
   
 # Refresher
@@ -260,23 +262,52 @@ analysis_data$q1_demographics$total_oy_population %>%
 
 ```
 
-### Definitions
+### Definitions: Person Categorizations
 
 **Person-Level:**
 
-  -_Opportunity Youth:_ Individuals that are 16 to 24 years old who are simultaneously unemployed/ not in the labor force and not enrolled in school (disconnection)
-  - _Connected Youth:_ Individuals that are 16 to 24 years old who are either employed, enrolled in school, or both.
-  - _Everyone Else:_ Individuals outside of this age category who may be enrolled in school or employed
+- _Opportunity Youth:_ Individuals that are 16 to 24 years old who are simultaneously unemployed/ not in the labor force and not enrolled in school (disconnection)
+- _Connected Youth:_ Individuals that are 16 to 24 years old who are either employed, enrolled in school, or both.
+- _Everyone Else:_ Individuals outside of this age category who may be enrolled in school or employed
 
-**Household-level:**
+### Definitions: Household Categorizations
 
-  - *OY Household:* There is at least one 'Opportunity Youth' in the household but no 'Connected Youth' in the household. There may be 'Everyone Else' in the household. 
-  - *OY & CY Household:* There are both 'Opportunity Youth' and 'Connected Youth' in the household and possibly 'Everyone Else'.
-  - *CY Only Household:* There are only 'Connected Youth' and no 'Opportunity Youth' or 'Everyone Else' in the household.
+```{r}
+
+# **Household-level:**
+# 
+# - *OY Household:* There is at least one 'Opportunity Youth' in the household but no 'Connected Youth' in the household. There may be 'Everyone Else' in the household.
+# - *OY & CY Household:* There are both 'Opportunity Youth' and 'Connected Youth' in the household and possibly 'Everyone Else'.
+# - *CY Only Household:* There are only 'Connected Youth' and no 'Opportunity Youth' or 'Everyone Else' in the household.
+
+present_func <- function(var){
+  
+  var <- 
+    if_else(!is.na(var), 
+            "Present",
+            "Not Present")
+  
+  return(var)
+  
+}
+
+analysis_data$household_chart %>% 
+  mutate(across(c(connected_youth, everyone_else, opp_youth), 
+                .fns = ~ present_func(.))) %>% 
+  select(c(1,3,2,4)) %>% 
+  pretty_flex() %>% 
+  flextable::set_header_labels(
+    oy_household_full = "Household Type", 
+    everyone_else = "Everyone Else", 
+    connected_youth = "Connected Youth", 
+    opp_youth = "Opportunity Youth"
+  )
+  
+```
 
 
 
-
+# Results
 
 
 ### Person of Reference 
@@ -336,7 +367,7 @@ ipums_data$at_least_one_child %>%
     position = position_dodge(width = .9), 
     size = 4, 
     color = 'black', 
-    vjust = -1.5
+    vjust = 1.29
   )
   
 
@@ -405,14 +436,16 @@ ipums_data$percent_children %>%
 ```{r}
 ss <- 
   analysis_data$household_type_count %>% 
-  select(oy_household, n) %>%
-  mutate(label = paste0(oy_household, "\n", "N = ", n %>% format(big.mark = ','))) %>%
-  select(oy_household, label) %>% 
-  spread(oy_household, label)
+  select(oy_household_full, n) %>%
+  mutate(label = paste0(oy_household_full, "\n", "N = ", n %>% format(big.mark = ','))) %>%
+  select(oy_household_full, label) %>% 
+  spread(oy_household_full, label) %>% 
+  unlist()
 
 analysis_data$household_type_percent %>% 
+  filter(oy_household_full != "EE Only Household") %>% 
   # mutate(oy_household = figure_helpers$format_oy_household(oy_household)) %>% 
-  single_plot() +
+  single_plot(x_col = 'oy_household_full') +
   geom_text(aes(label = if_else(percent > .05,
                                 scales::percent(percent, accuracy = .1),
                                 "")),
@@ -422,7 +455,8 @@ analysis_data$household_type_percent %>%
        caption = paste0(figure_helpers$citations['PUMS'], 
                         figure_helpers$fig_help$newline, 
                         figure_helpers$suppress)) + 
-  scale_x_discrete(labels = ss)
+  scale_x_discrete(labels = ss) + 
+  coord_flip()
 ```
 
 
@@ -436,7 +470,7 @@ analysis_data$household_type_percent %>%
   
 
 analysis_data$household_income_estimates %>% 
-  ggplot(aes(x = oy_household, y = percent)) + 
+  ggplot(aes(x = fct_reorder(oy_household, percent), y = percent)) + 
   geom_col(color = 'black', 
            fill = color_contrast[2]) + 
   geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
@@ -449,8 +483,11 @@ analysis_data$household_income_estimates %>%
   theme(axis.text.x = element_text(face = 'bold')) + 
   labs(
     caption = figure_helpers$citations['PUMS'], 
-    y = "Household Income") + 
-  scale_y_continuous(labels = scales::dollar) 
+    y = "Household Income"
+    ) + 
+  scale_y_continuous(labels = scales::dollar) + 
+  wrap_x_labels
+
 
 
 ```

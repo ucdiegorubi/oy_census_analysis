@@ -57,28 +57,23 @@ figure_helpers <-
     
     format_oy_household = function(oy_household){
       
-      households <- 
-        c("Non-OY Household", 
-          "OY & CY Household", 
-          "OY Household", 
-          "CY Only Household")
-      
-      oy_household <- 
-        case_when(
-          oy_household == "non_oy_household" ~ households[1], 
-          oy_household == "oy_cy_household"  ~ households[2], 
-          oy_household == "oy_household"     ~ households[3], 
-          oy_household == "cy_only_household"~ households[4]
-        )
+      # households <- 
+      #   c("Non-OY Household", 
+      #     "OY & CY Household", 
+      #     "OY Household", 
+      #     "CY Only Household")
+      # 
+      # oy_household <- 
+      #   case_when(
+      #     oy_household == "non_oy_household" ~ households[1], 
+      #     oy_household == "oy_cy_household"  ~ households[2], 
+      #     oy_household == "oy_household"     ~ households[3], 
+      #     oy_household == "cy_only_household"~ households[4]
+      #   )
       
       oy_household <-  
         factor(
-          oy_household, 
-          levels = c(households[1], 
-                     households[2],
-                     households[4],
-                     households[3]), 
-          ordered = TRUE)
+          oy_household)
       
       return(oy_household)
     }, 
@@ -104,3 +99,55 @@ figure_helpers <-
     
       
   )
+
+pretty_flex <- function(x){
+  
+  require(flextable)
+  require(officer)
+  
+  num_col = ncol(x)
+  
+  row_indices <- function(x, type = c("odd", "even")){
+    
+    num_rows = nrow(x)
+    
+    get_row_indices <- function(){
+      
+      row_indices <- 1:num_rows
+      
+      if(type == "odd"){
+        test <- which((row_indices %% 2) == 1)
+      } else{
+        test <- which((row_indices %% 2)== 0)
+      }
+      
+      return(test)
+      
+    }  
+    
+    indices <- get_row_indices()
+    
+    return(indices)
+  }
+  
+  x %>% 
+    flextable() %>% 
+    autofit() %>% 
+    font(fontname = 'Arial',part = 'body') %>% 
+    font(fontname = 'Arial', part = 'header') %>%
+    fontsize(part = 'all', size = 10) %>% 
+    bold(part = 'header') %>% 
+    color(part = 'header',color = 'white') %>% 
+    align(align = 'left',
+          j = 1,
+          part = 'all') %>%
+    align(align = 'center', 
+          j = 2:num_col, 
+          part = 'all') %>% 
+    bg(part = 'header', 
+       bg = "#c16622") %>% 
+    bg(i = row_indices(x, 'even'), 
+       bg = "#d6d6ce") %>% 
+    border_remove()
+  
+}
