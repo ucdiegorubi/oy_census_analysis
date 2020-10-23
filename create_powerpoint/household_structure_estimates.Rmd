@@ -257,7 +257,9 @@ analysis_data$q1_demographics$total_oy_population %>%
   labs(y = "Percent", 
        caption = paste0(figure_helpers$citations['PUMS'], 
                         figure_helpers$fig_help$newline)) + 
-  scale_y_continuous(labels = scales::percent, limits = c(0,1))
+  scale_y_continuous(labels = scales::percent, limits = c(0,1)) + 
+  geom_text(aes(label = scales::percent(percent, accurary = .01)), 
+            vjust = 1.4)
 
 
 ```
@@ -310,7 +312,7 @@ analysis_data$household_chart %>%
 # Results
 
 
-### Who identifies as 'Reference' Person on the ACS?
+### Identify as Reference Person
 
 
 ```{r}
@@ -333,7 +335,7 @@ analysis_data$q2_household$head_of_household_alt %>%
 ```
 
 
-### Do they have children?
+### Presence of at least one child
 
 ```{r, fig.height = 6}
 # children are now individual level so I can say, does a given individual have at least one child?
@@ -433,7 +435,7 @@ ipums_data$percent_children %>%
 
 ```
 
-### Type of Household
+### Type of Household Population Sizes
 
 ```{r, fig.width = 9}
 ss <- 
@@ -474,7 +476,7 @@ analysis_data$household_type_percent %>%
   
 
 analysis_data$household_type_median_income %>% 
-  ggplot(aes(x = fct_reorder(oy_household, percent), y = percent)) + 
+  ggplot(aes(x = fct_reorder(oy_household_full, percent), y = percent)) + 
   geom_col(color = 'black', 
            fill = color_contrast[2]) + 
   geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
@@ -495,7 +497,7 @@ analysis_data$household_type_median_income %>%
   wrap_x_labels + 
   annotate(geom = 'text', 
            y = analysis_data$chicago_household_median_income$percent + 1000,
-           x = 3,
+           x = 2,
            label = scales::dollar(analysis_data$chicago_household_median_income$percent))
 
 
@@ -590,7 +592,7 @@ analysis_data$q2_household$married %>%
 
 ```
 
-### Partnered
+### Partnered Status
 
 ```{r}
 # person level
@@ -681,7 +683,7 @@ analysis_data$q2_household$transportation_mode %>%
 
 ```
 
-### Migration: Average Commute Time for Connected Youth
+### Mobility: Average Commute Time for Connected Youth
 
 ```{r}
 

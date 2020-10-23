@@ -399,6 +399,25 @@ categorize_oy_households <- function(pums_data){
     
   }
   
+  oy_household_collapse <- function(oy_household){
+    
+    # Collapsing OY-Only
+    # OY-CY ONLY
+    # OY-EE Only
+    
+    out <- 
+      forcats::fct_collapse(
+        .f = oy_household,
+        `OY Household` = c("OY Only Household", 
+                           "OY-CY Only Household", 
+                           "OY-EE Only Household", 
+                           "Combined Household"))
+    
+    return(out)
+    
+    
+  }
+  
   # Run Functions
   message("Tabulating Person-type per household")
   wide_data <- spread_oy_flag()
@@ -406,6 +425,9 @@ categorize_oy_households <- function(pums_data){
   
   short <- generate_household_categories(wide_data = wide_data)
   full <- generate_complete_household_categories(wide_data = wide_data)
+  full <- 
+    full %>% 
+    mutate(oy_household_full = oy_household_collapse(oy_household_full))
   
   # join the two together
   message("Joining Data")
