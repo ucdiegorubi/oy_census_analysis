@@ -60,20 +60,23 @@ figure_helpers <-
       households <- 
         c("Non-OY Household", 
           "OY & CY Household", 
-          "OY Household")
+          "OY Household", 
+          "CY Only Household")
       
       oy_household <- 
         case_when(
           oy_household == "non_oy_household" ~ households[1], 
           oy_household == "oy_cy_household"  ~ households[2], 
           oy_household == "oy_household"     ~ households[3], 
+          oy_household == "cy_only_household"~ households[4]
         )
       
       oy_household <-  
         factor(
           oy_household, 
           levels = c(households[1], 
-                     households[2], 
+                     households[2],
+                     households[4],
                      households[3]), 
           ordered = TRUE)
       

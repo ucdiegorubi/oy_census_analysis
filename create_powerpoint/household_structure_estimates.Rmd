@@ -133,7 +133,7 @@ basic_plot <- function(data, fill_label = NULL){
                   group = !!fill_col), 
               position = position_stack(vjust = .5)) +
     theme_classic() + 
-    scale_y_continuous(labels = scales::percent) + 
+    scale_y_continuous(labels = function(x) scales::percent(x, accuracy = .1)) + 
 
     erase_y_axis + 
     erase_x_legend + 
@@ -194,7 +194,7 @@ basic_plot_dodge <- function(data, fill_label = NULL, erase = TRUE){
     #               width = .5, 
     #               position = position_dodge(1))+
     theme_classic() + 
-    scale_y_continuous(labels = scales::percent) + 
+    scale_y_continuous(labels = function(x) scales::percent(x, accuracy = .1)) + 
     theme(axis.text.x = element_text(face = 'bold')) +
     erase_x_legend
   
@@ -232,14 +232,14 @@ basic_plot_dodge <- function(data, fill_label = NULL, erase = TRUE){
 * What are the household income characteristics of Opportunity Youth?
   - Household income by household type
   - Total personal income
-* Mobility Status
+* What are the mobility characteristics of Opportunity Youth?
   - Migration, mode of transportation, and average commute time
 * Pending
   - Food Stamps Recipients, Household Types, Number of Workers in Family, Same-Sex Households, Multi-generational Families
   
-# Results
+# Refresher
 
-### Refresher: Number of Opportunity Youth
+### Number of Opportunity Youth
 
 ```{r}
 ss <- analysis_data$q1_demographics$total_oy_population %>% 
@@ -260,13 +260,31 @@ analysis_data$q1_demographics$total_oy_population %>%
 
 ```
 
+### Definitions
+
+**Person-Level:**
+
+  -_Opportunity Youth:_ Individuals that are 16 to 24 years old who are simultaneously unemployed/ not in the labor force and not enrolled in school (disconnection)
+  - _Connected Youth:_ Individuals that are 16 to 24 years old who are either employed, enrolled in school, or both.
+  - _Everyone Else:_ Individuals outside of this age category who may be enrolled in school or employed
+
+**Household-level:**
+
+  - *OY Household:* There is at least one 'Opportunity Youth' in the household but no 'Connected Youth' in the household. There may be 'Everyone Else' in the household. 
+  - *OY & CY Household:* There are both 'Opportunity Youth' and 'Connected Youth' in the household and possibly 'Everyone Else'.
+  - *CY Only Household:* There are only 'Connected Youth' and no 'Opportunity Youth' or 'Everyone Else' in the household.
 
 
-### Heads of Household
+
+
+
+
+### Person of Reference 
 
 
 ```{r}
 ss <- analysis_data$q2_household$head_of_household_alt %>% group_by(oy_hh_flag) %>% summarize(n = sum(n)) %>% spread(oy_hh_flag, n) %>% unlist()
+
 
 analysis_data$q2_household$head_of_household_alt %>%
   filter(!str_detect(oy_hh_flag, "Eve")) %>% 
@@ -284,7 +302,7 @@ analysis_data$q2_household$head_of_household_alt %>%
 
 ### Do they have children?
 
-```{r}
+```{r, fig.height = 6}
 # children are now individual level so I can say, does a given individual have at least one child?
 
 ipums_data$at_least_one_child %>% 
@@ -304,19 +322,21 @@ ipums_data$at_least_one_child %>%
   wrap_x_labels + 
   scale_fill_manual(values = color_contrast_alt) + 
   labs(
-    caption = figure_helpers$citations['IPUMS'], 
+    caption = paste0(figure_helpers$citations['IPUMS'],
+                     figure_helpers$fig_help$newline,
+                     figure_helpers$suppress),
     y = "Percent"
   ) + 
   geom_text(
     aes(label = 
-          if_else(percent > .05, 
+          if_else(percent >= 0, 
                   scales::percent(percent, accuracy = .1),
                   ""),
         group = at_least_one_child), 
     position = position_dodge(width = .9), 
     size = 4, 
     color = 'black', 
-    vjust = 1.5
+    vjust = -1.5
   )
   
 
@@ -410,7 +430,7 @@ analysis_data$household_type_percent %>%
 
 
 
-### Income Characteristics: Household Income
+### Income Characteristics: Average Household Income
 
 ```{r}
   
@@ -438,7 +458,7 @@ analysis_data$household_income_estimates %>%
 
 
 
-### Income Characteristics: Total Personal Income
+### Income Characteristics: Total Average Personal Income
 
 
 ```{r}
@@ -489,7 +509,7 @@ analysis_data$hh_income_bracket %>%
 
 
 
-### Marital Status / Partnered
+### Marital Status
 ```{r}
 
 # person level
@@ -531,7 +551,7 @@ analysis_data$q2_household$partnered %>%
                     group = PARTNER_label),
                 width = .5,
                 position = position_dodge(.9)) + 
-  labs(fill = "Partner Status", 
+  labs(fill = "Lives with Partner", 
        caption = figure_helpers$citations['PUMS'], 
        y = "Percent") + 
   wrap_x_labels  + 
@@ -560,7 +580,7 @@ analysis_data$q2_household$partnered %>%
 # person level
 analysis_data$q2_household$migration %>% 
   basic_plot_dodge(erase = F) + 
-  labs(fill = "Migration Status", 
+  labs(fill = "Moved within last year", 
        caption = paste0(figure_helpers$citations['PUMS'], 
                         figure_helpers$fig_help$newline,
                         figure_helpers$suppress), 
@@ -584,30 +604,40 @@ analysis_data$q2_household$migration %>%
 
 ```
 
-### Mobility: Mode of Transportation
+### Mobility: Mode of Transportation for Connected Youth
 ```{r}
 # Person level
 analysis_data$q2_household$transportation_mode %>% 
+  filter(oy_flag != "Opportunity Youth") %>% 
   mutate(JWTR_label = str_remove(JWTR_label, "\\(.*\\)")) %>% 
   basic_plot_dodge(erase = F) + 
   labs(fill = "Mode of Transport", 
-       caption = figure_helpers$citations['PUMS'], 
+       caption = paste0(figure_helpers$citations['PUMS'], 
+                        figure_helpers$fig_help$newline, 
+                        figure_helpers$suppress),
        y = "Percent") + 
   wrap_x_labels + 
   geom_errorbar(aes(ymin = percent, ymax = percent_upp), 
                 position = position_dodge(width = .9),
                 width = .3) + 
-  scale_fill_manual(values = c(color_palette(9), color_palette_light(9)))
+  scale_fill_manual(values = c(color_palette(9), color_palette_light(9))) + 
+  geom_text(aes(label = if_else(percent > .05, 
+                                scales::percent(percent, accuracy = .1), 
+                                "")), 
+            position = position_dodge(width = .9), 
+            vjust = 1.4, 
+            size = 3)
 
 ```
 
-### Migration: Average Commute Time
+### Migration: Average Commute Time for Connected Youth
 
 ```{r}
 
 # mode of transportation
 # person level 
 analysis_data$q2_household$commute_bracket %>% 
+  filter(oy_flag != "Opportunity Youth") %>% 
   mutate(commute_bracket = forcats::fct_relevel(commute_bracket, "100 +", after = 11)) %>% 
   basic_plot_dodge(erase = F) +
   labs(fill = "Commute Time (minutes)", 

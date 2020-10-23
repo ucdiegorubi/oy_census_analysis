@@ -432,7 +432,8 @@ analysis_data$oy_edu_attainment %>%
                                 scales::percent(percent, accuracy = .1), 
                                 ""), 
                 group = school_attainment), 
-            position = position_stack(vjust = .5))
+            position = position_stack(vjust = .5)) + 
+  scale_fill_manual(values = c(ggsci::pal_uchicago('default')(9), "salmon1"))
 
 
 
@@ -443,34 +444,8 @@ analysis_data$oy_edu_attainment %>%
 
 
 
-## Race & Gender
+## Race & Gender Distribution of Opportunity Youth and Connected Youth
 
-
-
-```{r, eval = F}
-
-analysis_data$oy_race_gender %>% 
-  ggplot(aes(x = oy_flag, 
-             y = percent)) + 
-  geom_col(aes(fill = SEX_label)) + 
-  facet_wrap(~race_ethnicity, 
-             scales = 'free_y') + 
-  scale_y_continuous(labels = scales::percent) + 
-  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
-                group = SEX_label), 
-            position = position_stack(vjust = .5), 
-            size = 3) + 
-  theme_classic() + 
-  theme( strip.background = element_blank(), 
-         # strip.text.x = element_text(face = 'bold'), 
-         axis.title.x = element_blank()) + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 10)) + 
-  labs(fill = "Gender")
-  
-
-
-
-```
 ```{r}
 
 
@@ -515,6 +490,21 @@ analysis_data$oy_race_gender_alternate %>%
 
 
 ```{r}
+ss <- 
+  analysis_data$oy_race_alternate %>% 
+  group_by(race_alternate) %>% 
+  summarize(n = sum(n)) %>% 
+  mutate(
+    label = paste0(race_alternate, 
+                   "\n", 
+                   "N = ", 
+                   n %>% format(big.mark = ','))
+  ) %>% 
+  select(race_alternate, label) %>% 
+  spread(race_alternate, label) %>% 
+  unlist()
+
+
 analysis_data$oy_race_gender_alternate %>% 
   filter(SEX_label != "Female") %>%
   ggplot(aes(x = race_alternate, 
@@ -524,9 +514,12 @@ analysis_data$oy_race_gender_alternate %>%
   facet_wrap(~oy_flag) + 
   coord_flip() + 
   theme_classic() + 
-  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
+  geom_text(aes(label = paste0(scales::percent(percent, accuracy = .1),
+                               figure_helpers$fig_help$newline, 
+                               figure_helpers$fig_help$N, 
+                               n %>% format(big.mark = ',')),
                 group = SEX_label), 
-            size = 2, 
+            size = 3, 
             position = position_stack(vjust= .5)) + 
   scale_y_continuous(labels = scales::percent) + 
   theme(
@@ -538,10 +531,10 @@ analysis_data$oy_race_gender_alternate %>%
   ) + 
   labs(
     x = "Race", 
-    y = "Percentage and Race of ", 
+    y = "", 
     fill = "Sex"
   ) + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 20)) + 
+  scale_x_discrete(labels = ss) + 
   scale_fill_manual(values = 
                       c(
                         # "#fff7bc",
