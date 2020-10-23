@@ -120,6 +120,7 @@ analysis_data$q1_demographics <-
     
     puma_oy_population = 
       pums_survey %>% 
+      filter(oy_flag != "everyone_else") %>% 
       create_estimate(pums_survey = ., PUMA, oy_flag),
     
     oy_disability = 
@@ -166,6 +167,14 @@ analysis_data$q1_demographics$geo_puma_pop =
   process_map_data(data = analysis_data$q1_demo$puma_oy_population,
                    names = 'oy_flag',
                    values = 'n') %>%
+  mutate(chi_puma = PUMACE10 %in% pums_df$PUMA[pums_df$chicago_puma_flag]) %>%
+  filter(chi_puma)
+
+analysis_data$q1_demographics$geo_puma_pop_percent = 
+  
+  process_map_data(data = analysis_data$q1_demo$puma_oy_population,
+                   names = 'oy_flag',
+                   values = 'percent') %>%
   mutate(chi_puma = PUMACE10 %in% pums_df$PUMA[pums_df$chicago_puma_flag]) %>%
   filter(chi_puma)
 
@@ -354,7 +363,7 @@ analysis_data$chicago_household_median_income <-
 
 analysis_data$household_type_median_income <- 
   pums_hh_survey %>% 
-  group_by(oy_household) %>% 
+  group_by(oy_household_full) %>% 
   summarize(percent = survey_median(HINCP)) %>% 
   mutate(percent_upp = percent + (1.96 * percent_se), 
          percent_low = percent - (1.96 * percent_se))
