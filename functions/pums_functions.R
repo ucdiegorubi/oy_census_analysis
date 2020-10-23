@@ -252,14 +252,21 @@ add_other_indicators <- function(pums_data){
     pums_data %>% 
     mutate(age_bracket        = create_age_brackets(AGEP), 
            alt_age_bracket    = alt_age_brackets(AGEP), 
+           # does someone have at least one child - defunct, opted for IPUMS data source
            child_flag         = at_least_one_child(NOC), 
+           # adjusted total personal income
            adjusted_income    = income_constant_dollars(income_variable = PINCP, 
                                                      adjustment_variable = ADJINC),
+           # adjusted household income
            HINCP              = income_constant_dollars(HINCP, ADJINC),
+           
            income_bracket     = create_income_brackets(adjusted_income), 
            commute_bracket    = create_commute_bracket(JWMNP), 
+           # identifying heads of household from reference person
            head_hh_flag       = identify_head_of_household(RELP),
+           # identifing heads of household within oy group
            oy_hh_flag         = identify_hh_oy(oy_flag, head_hh_flag), 
+           # collapsing education attainment to more manageable number of education levels
            school_attainment  = clean_education_variable(SCHL_label))
   
   return(pums_data)

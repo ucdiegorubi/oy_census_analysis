@@ -295,6 +295,20 @@ analysis_data$q2_household <-
                                      oy_flag)) %>% 
            set_names(nm = numeric_cols$values))
 
+analysis_data$oy_personal_median_income <- 
+  pums_survey %>% 
+  group_by(oy_flag) %>% 
+  summarize(
+    percent = survey_median(adjusted_income)
+  ) %>% 
+  mutate(percent_upp = percent + (1.96 * percent_se), 
+         percent_low = percent - (1.96 * percent_se))
+
+  
+  
+  
+  
+
 
 # HOUSEHOLD ESTIMATES -----------------------------------------------------
 
@@ -316,11 +330,41 @@ analysis_data$household_type_count <-
   group_by(oy_household_full) %>% 
   survey_count(vartype = c('se', 'ci'))
 
+analysis_data$chicago_household_income <- 
+  pums_hh_survey %>% 
+  summarize(
+    percent = survey_mean(HINCP, vartype = c("se", "ci"))
+  )
+
 analysis_data$household_chart <- 
   pums_df %>% 
   group_by(oy_household_full) %>% 
   count(oy_flag) %>% 
   spread(oy_flag, n)
+
+# calling this percent but only because ive got plotting functions relying on 
+# percent being a column
+analysis_data$chicago_household_median_income <- 
+  pums_hh_survey %>% 
+  # group_by(oy_household) %>% 
+  summarize(percent = survey_median(HINCP)) %>% 
+  mutate(percent_upp = percent + (1.96 * percent_se), 
+         percent_low = percent - (1.96 * percent_se))
+
+
+analysis_data$household_type_median_income <- 
+  pums_hh_survey %>% 
+  group_by(oy_household) %>% 
+  summarize(percent = survey_median(HINCP)) %>% 
+  mutate(percent_upp = percent + (1.96 * percent_se), 
+         percent_low = percent - (1.96 * percent_se))
+
+analysis_data$household_type_full_median_income <- 
+  pums_hh_survey %>% 
+  group_by(oy_household_full) %>% 
+  summarize(percent = survey_median(HINCP)) %>% 
+  mutate(percent_upp = percent + (1.96 * percent_se), 
+         percent_low = percent - (1.96 * percent_se))
 
 
 

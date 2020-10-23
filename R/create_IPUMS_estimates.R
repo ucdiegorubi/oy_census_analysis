@@ -42,11 +42,13 @@ analysis_data <-
     
     n_children = 
       ipums_survey %>% 
+      filter(at_least_one_child == "At least one child") %>% 
       group_by(oy_flag, NCHILD) %>% 
       survey_count(vartype = c("se", 'ci')), 
     
     percent_children = 
       ipums_survey %>% 
+      filter(at_least_one_child == "At least one child") %>% 
       group_by(oy_flag, NCHILD) %>% 
       summarize(
         percent = survey_mean(vartype = c('se', 'ci'))

@@ -11,7 +11,7 @@ output:
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = F, 
                       message = F, 
-                      fig.height = 4, 
+                      fig.height = 5, 
                       fig.width = 8)
 ```
 
@@ -158,7 +158,7 @@ single_plot <- function(data, x_col = NULL){
     ggplot(aes(x = !!x_col, y = percent)) + 
     geom_col(color = 'black', 
              fill = color_contrast[2], 
-             width = .5) + 
+             width = .7) + 
     geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
                   width = .2) + 
     theme_classic() + 
@@ -310,7 +310,7 @@ analysis_data$household_chart %>%
 # Results
 
 
-### Person of Reference 
+### Who identifies as 'Reference' Person on the ACS?
 
 
 ```{r}
@@ -327,7 +327,9 @@ analysis_data$q2_household$head_of_household_alt %>%
   scale_x_discrete(labels = function(x) paste0(x, 
                                                figure_helpers$fig_help$newline, 
                                                figure_helpers$fig_help$N,
-                                               (ss[-c(3:4)]) %>% format(big.mark = ',')))
+                                               (ss[-c(3:4)]) %>% format(big.mark = ','))) + 
+  geom_text(aes(label = scales::percent(percent)), 
+            vjust = 1.4)
 ```
 
 
@@ -433,7 +435,7 @@ ipums_data$percent_children %>%
 
 ### Type of Household
 
-```{r}
+```{r, fig.width = 9}
 ss <- 
   analysis_data$household_type_count %>% 
   select(oy_household_full, n) %>%
@@ -443,19 +445,21 @@ ss <-
   unlist()
 
 analysis_data$household_type_percent %>% 
-  filter(oy_household_full != "EE Only Household") %>% 
+  # filter(oy_household_full != "EE Only Household") %>% 
   # mutate(oy_household = figure_helpers$format_oy_household(oy_household)) %>% 
   single_plot(x_col = 'oy_household_full') +
   geom_text(aes(label = if_else(percent > .05,
                                 scales::percent(percent, accuracy = .1),
-                                "")),
-            vjust = 1.5)+
-  scale_y_continuous(labels = scales::percent) + 
+                                "")), 
+            hjust = 1.1) +
+  scale_y_continuous(labels = scales::percent, breaks = c(0,.1, .2, .3, .4, .5, .6, .7, .8)) + 
   labs(y = "Percent", 
        caption = paste0(figure_helpers$citations['PUMS'], 
                         figure_helpers$fig_help$newline, 
-                        figure_helpers$suppress)) + 
+                        figure_helpers$suppress), 
+       x = "Household Type") + 
   scale_x_discrete(labels = ss) + 
+  theme(axis.text.x = element_text(size = 8)) + 
   coord_flip()
 ```
 
@@ -464,17 +468,19 @@ analysis_data$household_type_percent %>%
 
 
 
-### Income Characteristics: Average Household Income
+### Income Characteristics: Household Median Income
 
-```{r}
+```{r, fig.height = 6}
   
 
-analysis_data$household_income_estimates %>% 
+analysis_data$household_type_median_income %>% 
   ggplot(aes(x = fct_reorder(oy_household, percent), y = percent)) + 
   geom_col(color = 'black', 
            fill = color_contrast[2]) + 
   geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
                 width = .2) + 
+  geom_hline(yintercept = analysis_data$chicago_household_median_income$percent, 
+             linetype = 'dotted') + 
   theme_classic() + 
   geom_text(aes(label = scales::dollar(percent)), 
             position = position_stack(vjust = .5)) + 
@@ -483,10 +489,14 @@ analysis_data$household_income_estimates %>%
   theme(axis.text.x = element_text(face = 'bold')) + 
   labs(
     caption = figure_helpers$citations['PUMS'], 
-    y = "Household Income"
+    y = "Median Household Income"
     ) + 
   scale_y_continuous(labels = scales::dollar) + 
-  wrap_x_labels
+  wrap_x_labels + 
+  annotate(geom = 'text', 
+           y = analysis_data$chicago_household_median_income$percent + 1000,
+           x = 3,
+           label = scales::dollar(analysis_data$chicago_household_median_income$percent))
 
 
 
@@ -515,7 +525,7 @@ analysis_data$q2_household$average_income %>%
   erase_x_legend + 
   theme(axis.text.x = element_text(face = 'bold')) + 
   labs(
-    y = "Total Personal Income",
+    y = "Average Total Personal Income",
     caption = figure_helpers$citations['PUMS']
   ) + 
   wrap_x_labels + 
@@ -553,7 +563,9 @@ analysis_data$hh_income_bracket %>%
 analysis_data$q2_household$married %>% 
   basic_plot_dodge(erase = F) + 
   labs(fill = "Marital Status", 
-       caption = figure_helpers$citations['PUMS'], 
+       caption = paste0(figure_helpers$citations['PUMS'], 
+                        figure_helpers$fig_help$newline, 
+                        figure_helpers$suppress), 
        y = "Percent") + 
   wrap_x_labels  + 
   scale_fill_manual(values = c(color_contrast_alt[2], rev(color_palette(5)))) + 
@@ -588,8 +600,10 @@ analysis_data$q2_household$partnered %>%
                     group = PARTNER_label),
                 width = .5,
                 position = position_dodge(.9)) + 
-  labs(fill = "Lives with Partner", 
-       caption = figure_helpers$citations['PUMS'], 
+  labs(fill = "Unmarried partner household", 
+       caption = paste0(figure_helpers$citations['PUMS'], 
+                        figure_helpers$fig_help$newline, 
+                        figure_helpers$suppress), 
        y = "Percent") + 
   wrap_x_labels  + 
   ggsci::scale_fill_uchicago() + 
@@ -617,7 +631,7 @@ analysis_data$q2_household$partnered %>%
 # person level
 analysis_data$q2_household$migration %>% 
   basic_plot_dodge(erase = F) + 
-  labs(fill = "Moved within last year", 
+  labs(fill = "Mobility status (lived here 1 year ago)", 
        caption = paste0(figure_helpers$citations['PUMS'], 
                         figure_helpers$fig_help$newline,
                         figure_helpers$suppress), 
@@ -648,7 +662,7 @@ analysis_data$q2_household$transportation_mode %>%
   filter(oy_flag != "Opportunity Youth") %>% 
   mutate(JWTR_label = str_remove(JWTR_label, "\\(.*\\)")) %>% 
   basic_plot_dodge(erase = F) + 
-  labs(fill = "Mode of Transport", 
+  labs(fill = "Means of transportation to work", 
        caption = paste0(figure_helpers$citations['PUMS'], 
                         figure_helpers$fig_help$newline, 
                         figure_helpers$suppress),
