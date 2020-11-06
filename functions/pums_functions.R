@@ -445,3 +445,44 @@ categorize_oy_households <- function(pums_data){
   
 }
 
+create_puma_regions <- function(pums_data){
+  
+  southside_pumas <- 
+    c("03532", 
+      "03531", 
+      "03530",
+      "03529", 
+      "03528", 
+      "03527",
+      "03526")
+  
+  westside_pumas <- 
+    c("03521", 
+      "03523", 
+      "03524", 
+      "03522", 
+      "03520")
+  
+  # I know we could logically 
+  # We can define northside regions as the regions that are not
+  # southside or westside so we do not have to explicitely 
+  # define those PUMAS
+  
+  pums_data <- 
+    
+    pums_data %>% 
+    mutate(PUMA_region = 
+             case_when(PUMA %in% southside_pumas                       ~ "Southside", 
+                       PUMA %in% westside_pumas                        ~ "Westside", 
+                       !(PUMA %in% c(westside_pumas, southside_pumas)) ~ "Northside"))
+  
+  
+  
+  return(pums_data)
+  
+  
+  
+}
+
+
+

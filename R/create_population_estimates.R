@@ -68,6 +68,7 @@ pums_df <-
                 school_attainment,
                 oy_household,
                 oy_household_full,
+                PUMA_region,
 
                 contains('label')),  
       factor))

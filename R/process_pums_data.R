@@ -33,6 +33,9 @@ pums_df <-
   # PUMAS encompassing Chicago. There are 17 of them. 
   identify_chicago_pumas(pums_data = pums_df)
 
+pums_df <- 
+  create_puma_regions(pums_data = pums_df)
+
 # creates a new race variable that is, unfortunately, more succinct but also inclusive
 # of hispanic as a value for the race variable 
 # The next two functions are located in functions/pums_functions.R
