@@ -10,7 +10,8 @@ p_load(
   magrittr, 
   kableExtra, 
   viridis, 
-  flextable
+  flextable,
+  ggsci
 )
 
 

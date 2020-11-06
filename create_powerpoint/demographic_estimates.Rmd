@@ -441,7 +441,8 @@ analysis_data$q1_demographics$oy_edu_attainment %>%
   theme_classic() + 
   labs(
     fill = "Educational Attainment", 
-    y = "Percent"
+    y = "Percent", 
+    caption = "Cells representing less than 5% suppressed for clarity"
   ) + 
   erase_axis + 
   theme(axis.title.x = element_blank()) + 

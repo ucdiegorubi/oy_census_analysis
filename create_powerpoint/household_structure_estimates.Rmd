@@ -69,8 +69,6 @@ ipums_data %<>%
         .x %>% 
         mutate(oy_flag = figure_helpers$format_oy_variable(oy_flag)))
 
-# analysis_data <- 
-#   analysis_data %>% map(.f = ~ .x %>% filter(across(everything(), ~ !(str_detect(.x, "Every")))))
 
 erase_y_axis = 
    theme(
