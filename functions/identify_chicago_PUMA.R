@@ -9,9 +9,9 @@ identify_chicago_pumas <- function(pums_data){
     puma_crosswalk <- 
       
       puma_crosswalk %>% 
-      filter(`State Name` == "Illinois", 
+      dplyr::filter(`State Name` == "Illinois", 
              str_detect(`PUMA Name`, "^Chicago City")) %>% 
-      pull(`PUMA Code`)
+      dplyr::pull(`PUMA Code`)
     
     return(puma_crosswalk)
   
@@ -21,7 +21,7 @@ identify_chicago_pumas <- function(pums_data){
   
   pums_data <- 
     pums_data %>% 
-    mutate(
+    dplyr::mutate(
       chicago_puma_flag = 
         PUMA %in% puma_crosswalk
     )
