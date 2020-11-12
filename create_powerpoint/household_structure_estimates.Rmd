@@ -58,7 +58,7 @@ analysis_data$q2_household <-
                 .at = 'oy_flag',
                 .f = figure_helpers$format_oy_variable))
 
-analysis_data[c("household_income_estimates", "household_type_percent", "household_type_count")] %<>%
+analysis_data[c("household_income_estimates", "household_type")] %<>%
   map(.f = ~ 
         .x %>% 
         
@@ -437,21 +437,19 @@ ipums_data$percent_children %>%
 
 ```{r, fig.width = 9}
 ss <- 
-  analysis_data$household_type_count %>% 
+  analysis_data$household_type %>% 
   select(oy_household_full, n) %>%
   mutate(label = paste0(oy_household_full, "\n", "N = ", n %>% format(big.mark = ','))) %>%
   select(oy_household_full, label) %>% 
   spread(oy_household_full, label) %>% 
   unlist()
 
-analysis_data$household_type_percent %>% 
+analysis_data$household_type %>% 
   # filter(oy_household_full != "EE Only Household") %>% 
   # mutate(oy_household = figure_helpers$format_oy_household(oy_household)) %>% 
   single_plot(x_col = 'oy_household_full') +
-  geom_text(aes(label = if_else(percent > .05,
-                                scales::percent(percent, accuracy = .1),
-                                "")), 
-            hjust = 1.1) +
+  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
+                y = percent_upp + .021)) +
   scale_y_continuous(labels = scales::percent, breaks = c(0,.1, .2, .3, .4, .5, .6, .7, .8)) + 
   labs(y = "Percent", 
        caption = paste0(figure_helpers$citations['PUMS'], 
@@ -459,11 +457,59 @@ analysis_data$household_type_percent %>%
                         figure_helpers$suppress), 
        x = "Household Type") + 
   scale_x_discrete(labels = ss) + 
-  theme(axis.text.x = element_text(size = 8)) + 
-  coord_flip()
+  theme(axis.text.x = element_text(size = 8)) 
 ```
 
 
+
+
+### Household Composition
+
+```{r}
+
+analysis_data$hh_composition %>%
+  ggplot(aes(x = oy_household, y = percent, fill = oy_flag, group = oy_flag)) + 
+  geom_col(position = 'dodge', 
+           color = 'black') + 
+  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
+                    y = percent_upp + .03), 
+                position = position_dodge(width = .9), 
+            size = 2.7) + 
+  geom_errorbar(aes(ymin = percent_low, ymax = percent_upp), 
+            position = position_dodge(width = .95), 
+            width = .2) + 
+  theme_classic() + 
+  scale_y_continuous(labels = scales::percent) + 
+  labs(y = "Percent", 
+       x = "OY Household", 
+       fill = "OY Type") + 
+  wrap_x_labels + 
+  ggsci::scale_fill_uchicago()
+
+```
+# Average Household Size
+
+```{r}
+
+analysis_data$num_people_lived_with %>% 
+  ggplot(aes(x = oy_household, y = percent)) + 
+  geom_col(color = 'black', 
+           fill = color_contrast[2]) +
+  # geom_point(aes(size = percent_upp, color = oy_household)) +
+  geom_text(aes(label = format(percent, digits = 2), 
+                y = percent_upp + .12)) +
+  geom_errorbar(aes(ymin = percent_low, ymax = percent_upp), 
+                width = .2) +
+  # geom_segment(aes(x = oy_household, xend = oy_household, y = 0,yend = percent)) + 
+  theme_classic() + 
+  wrap_x_labels + 
+  labs(y = "Average number of people in household", 
+       x = "OY Household", 
+       size = "Standard Error") + 
+  ggsci::scale_color_uchicago()
+
+
+```
 
 
 
@@ -511,25 +557,25 @@ analysis_data$household_type_median_income %>%
 ```{r}
 
 analysis_data$q2_household$average_income %>% 
-  filter(!(str_detect(oy_flag, "Eve"))) %>% 
+  # filter(!(str_detect(oy_flag, "Eve"))) %>%
   ggplot(aes(x = oy_flag, y = percent)) + 
   geom_col(color = 'black', 
            fill = color_contrast[2]) + 
   geom_errorbar(aes(ymax = percent_upp, ymin = !!error_bar_setting), 
-                width = .2) + 
+                width = .2)+
   theme_classic() + 
   geom_text(aes(label = scales::dollar(percent)), 
             position = position_stack(vjust = .5), 
             size = 3.7) + 
   # labs( y = "Average Number of Children") + 
-  erase_x_legend + 
+  erase_x_legend  +
   theme(axis.text.x = element_text(face = 'bold')) + 
   labs(
     y = "Average Total Personal Income",
     caption = figure_helpers$citations['PUMS']
-  ) + 
+  ) +
   wrap_x_labels + 
-  scale_y_continuous(labels = scales::dollar, limits = c(0,15000)) 
+  scale_y_continuous(labels = scales::dollar, limits = c(0,40000)) 
 
 
   
@@ -712,12 +758,18 @@ analysis_data$q2_household$commute_bracket %>%
 
 ```{r, eval = F}
 # household level
-analysis_data$food_stamps %>% 
+analysis_data$foodstamps_per_household %>% 
   basic_plot_dodge() + 
+  geom_errorbar(aes(ymin = percent, ymax = percent_upp), 
+                position = position_dodge(width = .9), 
+                width = .2) +
+  geom_text(aes(label = scales::percent(percent, accuracy = .1), y = percent_upp + .03), 
+            position = position_dodge(width = 1)) + 
   labs(fill = "Food Stamp Recipient", 
-       caption = figure_helpers$citations['PUMS']) + 
+       caption = figure_helpers$citations['PUMS']) +
   wrap_x_labels + 
-  scale_fill_manual(values = color_contrast_alt)
+  scale_fill_manual(values = color_contrast_alt) 
+
 
 
 ```
@@ -728,10 +780,14 @@ analysis_data$food_stamps %>%
 
 ```{r, eval = F}
 # household level
-analysis_data$hh_type %>% 
+analysis_data$hht %>% 
   basic_plot_dodge() + 
   labs(fill = "Type of Household") + 
-  scale_fill_manual(values = c(color_contrast[2], color_palette_light(8)))
+  scale_fill_manual(values = c(color_contrast[2], color_palette_light(8)), 
+                    labels = function(x) str_wrap(x,30)) + 
+  theme(
+    legend.position = 'top') 
+
   
 
 
@@ -740,11 +796,9 @@ analysis_data$hh_type %>%
 
 
 
-### Household Characteristics: Workers in Family (Pending)
-
-
 ```{r, eval = F}
 
+### Household Characteristics: Workers in Family (Pending)
 # household level
 analysis_data$workers_in_fam %>% 
   basic_plot_dodge() + 
@@ -757,12 +811,9 @@ analysis_data$workers_in_fam %>%
 
 
 
-
-
-### Same-sex households (Pending)
-
 ```{r, eval = F}
 
+### Same-sex households (Pending)
 # household level
 analysis_data$same_sex_married %>% 
   basic_plot_dodge() + 
@@ -771,10 +822,11 @@ analysis_data$same_sex_married %>%
 
 ```
 
-### Multi-generational Families (Pending)
+
 
 ```{r, eval = F}
 
+### Multi-generational Families (Pending)
 # household level
 analysis_data$multigen %>% 
   basic_plot_dodge() + 

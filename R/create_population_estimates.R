@@ -75,6 +75,9 @@ pums_df <-
 
 
 # CREATING SURVEY OBJECTS -------------------------------------------------
+# creating two survey objects - one is person level and uses the person level replicate
+# weights while the other is household level. The household level survey needs to be
+# one row per household (SERIALNO in pums_df) hence the distinct() call. 
 
 ## FOR PERSON-LEVEL ESTIMATES
 pums_survey <- 
@@ -86,7 +89,7 @@ pums_survey <-
 pums_hh_survey <-
   pums_df %>%
   filter(chicago_puma_flag) %>% 
-  distinct(FS_label, HHT_label, MULTG_label,WIF_label, oy_household, HINCP,.keep_all = TRUE) %>% 
+  distinct(SERIALNO,.keep_all = TRUE) %>% 
   to_survey(df = .,
             type = 'housing',
             class = 'srvyr',
@@ -207,8 +210,6 @@ tabulate_dict <-
     "MULTG_label"   = 'multigen', 
     # person level
     "income_bracket"= "income_bracket",
-    # "NOC"           = "num_children",
-    # "NP"            = "num_people",
     # housing level
     "SSMC_label"    = 'same_sex_married', 
     
@@ -278,6 +279,7 @@ analysis_data$q2_household$geo_head_of_household_percent =
   filter(chi_puma)
 
 
+
 # NUMERIC ESTIMATES -------------------------------------------------------
 # same thing, some of these are housing level, so ignore those estimaets. 
 
@@ -314,7 +316,21 @@ analysis_data$oy_personal_median_income <-
   mutate(percent_upp = percent + (1.96 * percent_se), 
          percent_low = percent - (1.96 * percent_se))
 
+analysis_data$question_2$travel_time_to_work <- 
+  # we want to omit students connected youth that are attending school
+  pums_survey %>% 
+  filter(!(oy_flag == "connected_youth" & school_label == "Not Attending School")) %>% 
+  numeric_estimate(pums_survey = ., 
+                   count_col = !!(rlang::sym("JWMNP")), 
+                   oy_flag)
+
   
+analysis_data$question_2$transportation_mode <- 
+  pums_survey %>% 
+  filter(!(oy_flag == "connected_youth" & school_label == "Not Attending School")) %>% 
+  create_estimate(pums_survey = ., 
+                  oy_flag, 
+                  JWTR_label)
   
   
   
@@ -329,16 +345,13 @@ analysis_data$household_income_estimates <-
     percent = survey_mean(HINCP, vartype = c('se', 'ci'))
   )
 
-analysis_data$household_type_percent <- 
+analysis_data$household_type <- 
   pums_hh_survey %>% 
   group_by(oy_household_full) %>% 
   summarize(
-    percent = survey_mean(vartype = c('se', 'ci')))
-
-analysis_data$household_type_count <- 
-  pums_hh_survey %>% 
-  group_by(oy_household_full) %>% 
-  survey_count(vartype = c('se', 'ci'))
+    percent = survey_mean(vartype = c('se','ci')), 
+    n = survey_total(vartype = c('se','ci'))
+  )
 
 analysis_data$chicago_household_income <- 
   pums_hh_survey %>% 
@@ -375,6 +388,15 @@ analysis_data$household_type_full_median_income <-
   summarize(percent = survey_median(HINCP)) %>% 
   mutate(percent_upp = percent + (1.96 * percent_se), 
          percent_low = percent - (1.96 * percent_se))
+
+
+# HOUSEHOLD STRUCTURE -----------------------------------------------------
+
+c("household_composition.R", 
+  "household_structure.R", 
+  "estimates_per_puma.R") %>% 
+  walk(.f = ~ 
+        source(here::here('R', .)))
 
 
 
