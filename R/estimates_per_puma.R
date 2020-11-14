@@ -2,17 +2,20 @@
 # EMPLOYMENT BY PUMA ------------------------------------------------------
 analysis_data$employed_by_puma <- 
   pums_survey %>% 
-  group_by(PUMA, oy_flag, ESR_label) %>% 
+  filter(employment_label %in% c("Employed", "Unemployed")) %>% 
+  group_by(PUMA_region, PUMA, oy_flag, employment_label) %>% 
   summarize(
     n = survey_total(vartype = c('se', 'ci')), 
     percent = survey_mean(vartype = c("se", 'ci'))
   ) 
 
+test = analysis_data$employed_by_puma
+
 # SCHOOL ATTENDANCE BY PUMA -----------------------------------------------
 analysis_data$school_youth_attendance_by_puma <- 
   pums_survey %>% 
   # filter(oy_flag != "opp_youth") %>% 
-  group_by(PUMA, oy_flag, school_label) %>% 
+  group_by(PUMA_region, PUMA, oy_flag, school_label) %>% 
   summarize(
     n = survey_total(vartype = c("se", "ci")),
     percent = survey_mean(vartype = c("se", "ci"))
@@ -35,9 +38,9 @@ analysis_data$school_youth_attendance_labels <-
 
 analysis_data$median_income_hh_by_puma <- 
   pums_survey %>% 
-  group_by(PUMA, oy_hh_flag) %>% 
+  group_by(PUMA_region, PUMA, oy_hh_flag) %>% 
   summarize(
-    n = survey_median(adjusted_income, vartype = c('se'))
+    n = survey_mean(adjusted_income, vartype = c('se'))
   ) %>% 
   mutate(n_upp = n + (1.96*n_se), 
          n_low = n - (1.96*n_se))
@@ -64,7 +67,7 @@ analysis_data$median_income_hh_by_puma_region <-
   pums_survey %>% 
   group_by(PUMA_region, oy_hh_flag) %>% 
   summarize(
-    n = survey_median(adjusted_income)) %>% 
+    n = survey_mean(adjusted_income)) %>% 
   mutate(n_upp = n + (1.96*n_se), 
          n_low = n - (1.96*n_se))
 

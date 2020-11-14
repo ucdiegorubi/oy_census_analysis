@@ -73,7 +73,11 @@ identify_opportunity_youth <- function(pums_data){
           if_else(
                 employment_flag == TRUE, 
                 'Unemployed', 
-                'Not Unemployed'
+                if_else(
+                  # ESR == b = "N/A (less than 16 years old)"
+                  employment_flag == FALSE & ESR != "b", 
+                  "Employed", 
+                  "Less than 16 years old")
               )
           )
         

@@ -351,7 +351,9 @@ analysis_data$household_type <-
   summarize(
     percent = survey_mean(vartype = c('se','ci')), 
     n = survey_total(vartype = c('se','ci'))
-  )
+  ) 
+
+##
 
 analysis_data$chicago_household_income <- 
   pums_hh_survey %>% 
@@ -360,10 +362,21 @@ analysis_data$chicago_household_income <-
   )
 
 analysis_data$household_chart <- 
-  pums_df %>% 
+  pums_survey %>% 
+  
   group_by(oy_household_full) %>% 
-  count(oy_flag) %>% 
+  survey_count(oy_flag) %>% 
+  select(-n_se) %>% 
   spread(oy_flag, n)
+
+analysis_data$household_chart_percent <- 
+  pums_survey %>% 
+  group_by(oy_household_full, oy_flag) %>% 
+  summarize(
+    percent = survey_mean()
+  ) %>% 
+  select(-percent_se) %>% 
+  spread(oy_flag, percent)
 
 # calling this percent but only because ive got plotting functions relying on 
 # percent being a column

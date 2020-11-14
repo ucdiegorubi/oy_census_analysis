@@ -310,7 +310,7 @@ analysis_data$household_chart %>%
 # Results
 
 
-### Identify as Reference Person
+### Self-identify as Reference Person
 
 
 ```{r}
@@ -468,7 +468,7 @@ analysis_data$household_type %>%
 ```{r}
 
 analysis_data$hh_composition %>%
-  ggplot(aes(x = oy_household, y = percent, fill = oy_flag, group = oy_flag)) + 
+  ggplot(aes(x = oy_household_full, y = percent, fill = oy_flag, group = oy_flag)) + 
   geom_col(position = 'dodge', 
            color = 'black') + 
   geom_text(aes(label = scales::percent(percent, accuracy = .1), 
@@ -487,12 +487,46 @@ analysis_data$hh_composition %>%
   ggsci::scale_fill_uchicago()
 
 ```
-# Average Household Size
+
+### Household Composition: Alternate
+
+```{r}
+change_zero <- function(vector){
+  
+  vector <- 
+    if_else(is.na(vector), 0, 
+            vector)
+  
+  return(vector)
+  
+}
+
+
+
+analysis_data$household_chart_percent %>%
+  mutate(across(is.double, ~ change_zero(.))) %>% 
+  select(1, 3, 2, 4) %>% 
+  ungroup() %>% 
+  mutate(across(is.double,.fns = ~ scales::percent(., accuracy = .1))) %>% 
+  pretty_flex() %>%
+  flextable::set_header_labels(
+    oy_household_full = "Household Type", 
+    everyone_else = "Everyone Else", 
+    connected_youth = "Connected Youth", 
+    opp_youth = "Opportunity Youth"
+  )
+
+
+```
+
+
+
+### Average Household Size
 
 ```{r}
 
 analysis_data$num_people_lived_with %>% 
-  ggplot(aes(x = oy_household, y = percent)) + 
+  ggplot(aes(x = oy_household_full, y = percent)) + 
   geom_col(color = 'black', 
            fill = color_contrast[2]) +
   # geom_point(aes(size = percent_upp, color = oy_household)) +
@@ -541,8 +575,35 @@ analysis_data$household_type_median_income %>%
   wrap_x_labels + 
   annotate(geom = 'text', 
            y = analysis_data$chicago_household_median_income$percent + 1000,
-           x = 2,
+           x = 1,
            label = scales::dollar(analysis_data$chicago_household_median_income$percent))
+
+
+
+```
+
+
+### Median Income OY Reference Person by PUMA
+
+```{r}
+
+analysis_data$median_income_hh_by_puma_region %>% 
+  filter(str_detect(oy_hh_flag, "(Connected)|(Opportunity Youth)")) %>% 
+  ggplot(aes(x = PUMA_region, y = n)) + 
+  geom_col() + 
+  geom_errorbar(aes(ymin = n_low, ymax = n_upp), 
+                width = .2, 
+                linetype = 'dashed') +
+  facet_wrap(~oy_hh_flag, 
+             scales = 'free') +
+  scale_y_continuous(labels = scales::dollar) + 
+  theme_classic() + 
+  labs(y = "Median Income", 
+       x = "PUMA Region") + 
+  theme(
+    strip.background = element_blank(), 
+    strip.text = element_text(face = 'bold')
+  )
 
 
 
@@ -751,19 +812,16 @@ analysis_data$q2_household$commute_bracket %>%
 ```
 
 
+### Food Stamp Recipient Households
 
-# Pending Analyses
-
-### Income Characteristics: Food Stamps (Pending)
-
-```{r, eval = F}
+```{r, eval = T}
 # household level
 analysis_data$foodstamps_per_household %>% 
   basic_plot_dodge() + 
   geom_errorbar(aes(ymin = percent, ymax = percent_upp), 
                 position = position_dodge(width = .9), 
                 width = .2) +
-  geom_text(aes(label = scales::percent(percent, accuracy = .1), y = percent_upp + .03), 
+  geom_text(aes(label = scales::percent(percent, accuracy = .1), y = percent - .02), 
             position = position_dodge(width = 1)) + 
   labs(fill = "Food Stamp Recipient", 
        caption = figure_helpers$citations['PUMS']) +
@@ -776,17 +834,24 @@ analysis_data$foodstamps_per_household %>%
 
 
 
-### Household Type:(Pending)
+### Household Type
 
-```{r, eval = F}
+```{r, eval = T}
 # household level
 analysis_data$hht %>% 
   basic_plot_dodge() + 
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp, group = HHT_label), 
+                position = position_dodge(width = .9), 
+                width = .2) +
+  geom_text(aes(label = scales::percent(percent, suffix = "", accuracy = .1), group = HHT_label), 
+            size = 2.7, 
+            vjust = 1.25,
+            position = position_dodge(width = .9)) +
   labs(fill = "Type of Household") + 
   scale_fill_manual(values = c(color_contrast[2], color_palette_light(8)), 
                     labels = function(x) str_wrap(x,30)) + 
   theme(
-    legend.position = 'top') 
+    legend.position = 'right') 
 
   
 

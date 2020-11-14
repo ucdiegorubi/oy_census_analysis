@@ -4,7 +4,7 @@
 # percent oy, percent connected youth, percent everyone else
 analysis_data$hh_composition <- 
   pums_survey %>% 
-  group_by(oy_household, oy_flag) %>% 
+  group_by(oy_household_full, oy_flag) %>% 
   summarize(
     n = survey_total(vartype = c('se','ci')), 
     percent = survey_mean(vartype = c('se','ci'))
@@ -13,7 +13,7 @@ analysis_data$hh_composition <-
 # NUMBER OF PEOPLE IN A HOUSEHOLD -----------------------------------------
 analysis_data$num_people_lived_with <- 
   pums_hh_survey %>% 
-  group_by(oy_household) %>% 
+  group_by(oy_household_full) %>% 
   summarize(
     percent = survey_mean(NP, vartype = c('se','ci'))
   )
@@ -34,7 +34,7 @@ analysis_data$num_people_lived_with <-
 # MULTIGENERATIONAL HOUSEHOLD ---------------------------------------------
 analysis_data$multigenerational_household <- 
   pums_hh_survey %>% 
-  group_by(oy_household, MULTG_label) %>% 
+  group_by(oy_household_full, MULTG_label) %>% 
   summarize(
     percent = survey_mean(vartype = c('se','ci'))
   )

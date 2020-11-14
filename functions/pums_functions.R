@@ -358,41 +358,46 @@ categorize_oy_households <- function(pums_data){
           # 2 ^ 3 = 8, but all people are categorized so the house
           # with none does not exist
           case_when(
-            # oy_only
-            !is.na(opp_youth) &
-              is.na(connected_youth) &
-              is.na(everyone_else)                      ~"OY Only Household",
-            #   
-            # oy cy only - keep
             !is.na(opp_youth) & 
-              !is.na(connected_youth) & 
-              is.na(everyone_else)                      ~ "OY-CY Only Household", 
-            
-            # oy ee only
-            !is.na(opp_youth) &
-              is.na(connected_youth) &
-              !is.na(everyone_else)                     ~ "OY-EE Only Household",
-            
-            # Connected Youth Only - keep
+              is.na(connected_youth)                      ~ "OY Household", 
             !is.na(connected_youth) & 
-              is.na(opp_youth) & 
-              is.na(everyone_else)                      ~ "CY Only Household",
+              is.na(opp_youth)                            ~ "CY Only Household", 
             
-            # Connected Youth w/ EE - keep
-            is.na(opp_youth) & 
-              !is.na(connected_youth) & 
-              !is.na(everyone_else)                     ~ "CY-EE Only Household", 
+            # # oy_only
+            # !is.na(opp_youth) &
+            #   is.na(connected_youth) &
+            #   is.na(everyone_else)                      ~"OY Only Household",
+            # #   
+            # # oy cy only - keep
+            # !is.na(opp_youth) & 
+            #   !is.na(connected_youth) & 
+            #   is.na(everyone_else)                      ~ "OY-CY Only Household", 
+            # 
+            # # oy ee only
+            # !is.na(opp_youth) &
+            #   is.na(connected_youth) &
+            #   !is.na(everyone_else)                     ~ "OY-EE Only Household",
+            # 
+            # # Connected Youth Only - keep
+            # !is.na(connected_youth) & 
+            #   is.na(opp_youth) & 
+            #   is.na(everyone_else)                      ~ "CY Only Household",
+            # 
+            # # Connected Youth w/ EE - keep
+            # is.na(opp_youth) & 
+            #   !is.na(connected_youth) & 
+            #   !is.na(everyone_else)                     ~ "CY-EE Only Household", 
+            # 
+            # # everyone_else only- keep
+            # !is.na(everyone_else) & 
+            #   is.na(connected_youth) & 
+            #   is.na(opp_youth)                          ~ "EE Only Household", 
+            # 
+            # # Non-oy Household
+            # !is.na(opp_youth)                           ~ "Combined Household",
+            # 
             
-            # everyone_else only- keep
-            !is.na(everyone_else) & 
-              is.na(connected_youth) & 
-              is.na(opp_youth)                          ~ "EE Only Household", 
-            
-            # Non-oy Household
-            !is.na(opp_youth)                           ~ "Combined Household",
-            
-            
-            TRUE                                        ~ "Other Household")) %>% 
+            TRUE                                        ~ "All Other Household")) %>% 
       select(SERIALNO, oy_household_full)
     
     return(wide_data)
@@ -425,10 +430,10 @@ categorize_oy_households <- function(pums_data){
   
   short <- generate_household_categories(wide_data = wide_data)
   full <- generate_complete_household_categories(wide_data = wide_data)
-  full <- 
-    full %>% 
-    mutate(oy_household_full = oy_household_collapse(oy_household_full))
-  
+  # full <- 
+  #   full %>% 
+  #   mutate(oy_household_full = oy_household_collapse(oy_household_full))
+  # 
   # join the two together
   message("Joining Data")
   pums_data <-
