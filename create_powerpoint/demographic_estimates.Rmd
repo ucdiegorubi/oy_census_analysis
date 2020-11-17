@@ -102,8 +102,6 @@ color_contrast <-
 ```
 
 
-
-
 ## Today's Agenda
 
 - Population of Chicago by Age Bracket 
@@ -576,6 +574,44 @@ analysis_data$q1_demographics$geo_puma_pop_percent %>%
 
 ```
 
+
+```{r, include = F}
+
+puma_sf <- 
+  analysis_data$q1_demographics$geo_puma_pop %>% 
+  tigris::geo_join(spatial_data = ., 
+                   data_frame = 
+                     analysis_data$employed_by_puma %>% 
+                     ungroup() %>% 
+                     distinct(PUMA_region, PUMA) %>% 
+                     mutate(across(everything(), ~ as.character(.))),by_sp = 'PUMACE10', by_df = "PUMA")
+
+puma_reference_map <- 
+  
+  puma_sf %>% 
+  ggplot() + 
+  geom_sf(aes(fill = PUMA_region), 
+          alpha = .5) + 
+  geom_sf_text(mapping = aes(label = PUMACE10), 
+               size = 2.5) +
+  ggsci::scale_fill_uchicago() + 
+  theme_classic() + 
+  theme(
+    axis.ticks = element_blank(), 
+    axis.line = element_blank(), 
+    axis.text = element_blank(), 
+    axis.title = element_blank(),
+    legend.position = 'none'
+  ) + 
+  labs(
+    fill = "Chicago Region"
+  )
+
+
+
+```
+
+
 ## OY by PUMA
 
 ```{r}
@@ -609,9 +645,9 @@ analysis_data$q1_demographics$puma_oy_population %>%
 
 
 
-## Employment by PUMA: Connected Youth
+## Southside connected youth are less likely to be employed
 
-```{r}
+```{r, fig.height = 5, fig.width = 10}
 
 # analysis_data$employed_by_puma %>% 
 #   filter(oy_flag == "connected_youth", 
@@ -624,17 +660,17 @@ analysis_data$q1_demographics$puma_oy_population %>%
 #   scale_y_continuous(labels = scales::percent) +
 #   theme_classic() + 
 #   coord_flip()
-
-analysis_data$employed_by_puma %>% 
+plot_chart <- 
+  analysis_data$employed_by_puma %>% 
   filter(oy_flag == "connected_youth", 
-           employment_label == 'Employed') %>% 
+         employment_label == 'Employed') %>% 
   ggplot(aes(x = fct_reorder(PUMA, percent), y = percent, fill = PUMA_region)) + 
   geom_col() + 
   geom_errorbar(aes(ymin = !!error_bar_low, ymax = percent_upp), 
                 width = .2, 
                 linetype = 'dashed') +
   geom_text(aes(label = scales::percent(percent, suffix = "", accuracy = .1), 
-                y = percent - .02))+ 
+                y = percent - .04))+ 
   theme_classic() + 
   scale_y_continuous(labels = scales::percent) + 
   labs(y = "Percent", 
@@ -643,18 +679,23 @@ analysis_data$employed_by_puma %>%
   theme(
     legend.position = 'bottom'
   ) +
-  ggsci::scale_fill_uchicago() 
+  ggsci::scale_fill_uchicago() + 
+  coord_flip()
+
+
+cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/4, 3/4), rel_widths = c(2/5,3/5))
   
   
 
 
 ```
 
-## School Attendance for Connected Youth by PUMA
+## Westside connected youth are less likely to be enrolled in school 
 
-```{r}
+```{r, fig.height = 5, fig.width = 10}
 
-analysis_data$school_youth_attendance_by_puma %>% 
+plot_chart <- 
+  analysis_data$school_youth_attendance_by_puma %>% 
   filter(oy_flag == "connected_youth", 
          school_label == "Attending School") %>% 
   ggplot(aes(x = fct_reorder(PUMA, percent), y = percent, fill = PUMA_region)) + 
@@ -663,7 +704,7 @@ analysis_data$school_youth_attendance_by_puma %>%
                 width = .2, 
                 linetype = 'dashed') + 
   geom_text(aes(label = scales::percent(percent, accuracy = .1, suffix = ""), 
-                y = percent - .02))+ 
+                y = percent - .04))+ 
   theme_classic() + 
   scale_y_continuous(labels = scales::percent, limits = c(0,1)) + 
   labs(y = "Percent", 
@@ -672,7 +713,10 @@ analysis_data$school_youth_attendance_by_puma %>%
   theme(
     legend.position = 'bottom'
   ) +
-  ggsci::scale_fill_uchicago() 
+  ggsci::scale_fill_uchicago() + 
+  coord_flip()
+
+cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/4, 3/4), rel_widths = c(2/5,3/5))
 
 ```
 

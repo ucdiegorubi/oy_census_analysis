@@ -17,6 +17,14 @@ analysis_data$hht =
   ) 
 
 
+analysis_data$HISPEED_internet <- 
+  pums_hh_survey %>% 
+  group_by(oy_household_full, HISPEED_label) %>% 
+  summarize(percent = survey_mean(vartype = c('se', 'ci')), 
+            n = survey_total(vartype = c('se','ci')))
 
-
-
+analysis_data$LAPTOP <- 
+  
+  pums_hh_survey %>% 
+  create_estimate(pums_survey = ., 
+                  oy_household_full, HISPEED_label)

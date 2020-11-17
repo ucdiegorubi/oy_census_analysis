@@ -403,14 +403,157 @@ analysis_data$household_type_full_median_income <-
          percent_low = percent - (1.96 * percent_se))
 
 
-# HOUSEHOLD STRUCTURE -----------------------------------------------------
 
-c("household_composition.R", 
-  "household_structure.R", 
-  "estimates_per_puma.R") %>% 
-  walk(.f = ~ 
-        source(here::here('R', .)))
+# NEW ESTIMATES -----------------------------------------------------------
+# 11/17/2020
+# foodstamp receipt per household
+analysis_data$foodstamps_per_household <- 
+  pums_hh_survey %>% 
+  group_by(oy_household_full, FS_label) %>% 
+  summarize(
+    n = survey_total(vartype = c('se', 'ci')), 
+    percent = survey_mean(vartype = c('se','ci'))
+  )
 
+# Household structure per type of oy-household
+analysis_data$hht = 
+  pums_hh_survey %>% 
+  group_by(oy_household_full, HHT_label) %>% 
+  summarize(
+    percent = survey_mean(vartype = c('se', 'ci')), 
+    n = survey_total(vartype  = c('se','ci'))
+  ) 
+
+
+analysis_data$HISPEED_internet <- 
+  pums_hh_survey %>% 
+  group_by(oy_household_full, HISPEED_label) %>% 
+  summarize(percent = survey_mean(vartype = c('se', 'ci')), 
+            n = survey_total(vartype = c('se','ci')))
+
+analysis_data$LAPTOP <- 
+  
+  pums_hh_survey %>% 
+  create_estimate(pums_survey = ., 
+                  oy_household_full, HISPEED_label)
+
+
+# HOUSEHOLD COMPOSITION 11/17/2020 ----------------------------------------
+
+# TYPE OF PEOPLE IN A HOUSEHOLD -------------------------------------------
+# on average, how many members of each type are in an OY household?
+# percent oy, percent connected youth, percent everyone else
+analysis_data$hh_composition <- 
+  pums_survey %>% 
+  group_by(oy_household_full, oy_flag) %>% 
+  summarize(
+    n = survey_total(vartype = c('se','ci')), 
+    percent = survey_mean(vartype = c('se','ci'))
+  )
+
+# NUMBER OF PEOPLE IN A HOUSEHOLD -----------------------------------------
+analysis_data$num_people_lived_with <- 
+  pums_hh_survey %>% 
+  group_by(oy_household_full) %>% 
+  summarize(
+    percent = survey_mean(NP, vartype = c('se','ci'))
+  )
+# num_people_lived_with %>% 
+#   ggplot(aes(x = oy_household, y = percent)) + 
+#   geom_col(fill = "#D65177") + 
+#   geom_errorbar(aes(ymin = percent_low, ymax = percent_upp), 
+#                 width = .2) + 
+#   geom_text(aes(y = percent_upp + .15
+#                 , label = format(percent, digits = 2)), 
+#             vjust = 1.25) + 
+#   theme_classic() + 
+#   labs(y = "Average Household Size", 
+#        x = "Type of Household")
+
+
+
+# MULTIGENERATIONAL HOUSEHOLD ---------------------------------------------
+analysis_data$multigenerational_household <- 
+  pums_hh_survey %>% 
+  group_by(oy_household_full, MULTG_label) %>% 
+  summarize(
+    percent = survey_mean(vartype = c('se','ci'))
+  )
+
+
+# GEOGRAPHIC ESTIMATES ----------------------------------------------------
+# 11/17/2020
+# EMPLOYMENT BY PUMA ------------------------------------------------------
+analysis_data$employed_by_puma <- 
+  pums_survey %>% 
+  filter(employment_label %in% c("Employed", "Unemployed")) %>% 
+  group_by(PUMA_region, PUMA, oy_flag, employment_label) %>% 
+  summarize(
+    n = survey_total(vartype = c('se', 'ci')), 
+    percent = survey_mean(vartype = c("se", 'ci'))
+  ) 
+
+test = analysis_data$employed_by_puma
+
+# SCHOOL ATTENDANCE BY PUMA -----------------------------------------------
+analysis_data$school_youth_attendance_by_puma <- 
+  pums_survey %>% 
+  # filter(oy_flag != "opp_youth") %>% 
+  group_by(PUMA_region, PUMA, oy_flag, school_label) %>% 
+  summarize(
+    n = survey_total(vartype = c("se", "ci")),
+    percent = survey_mean(vartype = c("se", "ci"))
+  )
+
+analysis_data$school_youth_attendance_labels <- 
+  analysis_data$school_youth_attendance_by_puma %>% 
+  filter(oy_flag == "connected_youth") %>% 
+  group_by(PUMA) %>% 
+  summarize(
+    n = sum(n)
+  ) %>% 
+  mutate(label = paste(PUMA, "\n","N =", format(n, big.mark = ','))) %>% 
+  select(PUMA, label) %>% 
+  spread(PUMA, label) %>% 
+  unlist()
+
+
+# MEDIAN INCOME BY PUMA ---------------------------------------------------
+
+analysis_data$median_income_hh_by_puma <- 
+  pums_survey %>% 
+  group_by(PUMA_region, PUMA, oy_hh_flag) %>% 
+  summarize(
+    n = survey_mean(adjusted_income, vartype = c('se'))
+  ) %>% 
+  mutate(n_upp = n + (1.96*n_se), 
+         n_low = n - (1.96*n_se))
+
+# by puma region
+analysis_data$median_income_hh_by_puma %>% 
+  mutate(
+    ci_upp = n + 1.96*n_se, 
+    ci_low = n - (1.96*n_se)
+  ) 
+# filter(!str_detect(oy_hh_flag, "Everyone")) %>% 
+# ggplot(aes(x = PUMA, y = n, fill = oy_hh_flag, group = oy_hh_flag)) + 
+# geom_col(position = 'dodge') + 
+# geom_errorbar(aes(ymin = ci_low, ymax = ci_upp), 
+#               position = position_dodge(width = 1), 
+#               width = .2) +
+# theme_classic()
+
+# MEDIAN INCOME PUMA REGION -----------------------------------------------
+# does not seem like pursuing head of household median income, disaggregated by 
+# PUMA is worth it; no / few data points available and some negative values for the 
+# low confidence interval boundary
+analysis_data$median_income_hh_by_puma_region <- 
+  pums_survey %>% 
+  group_by(PUMA_region, oy_hh_flag) %>% 
+  summarize(
+    n = survey_mean(adjusted_income)) %>% 
+  mutate(n_upp = n + (1.96*n_se), 
+         n_low = n - (1.96*n_se))
 
 
 # SAVING DICTIONARIES -----------------------------------------------------

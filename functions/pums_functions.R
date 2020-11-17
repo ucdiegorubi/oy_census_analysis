@@ -359,7 +359,7 @@ categorize_oy_households <- function(pums_data){
           # with none does not exist
           case_when(
             !is.na(opp_youth) & 
-              is.na(connected_youth)                      ~ "OY Household", 
+              is.na(connected_youth)                      ~ "OY Only Household", 
             !is.na(connected_youth) & 
               is.na(opp_youth)                            ~ "CY Only Household", 
             
@@ -397,31 +397,31 @@ categorize_oy_households <- function(pums_data){
             # !is.na(opp_youth)                           ~ "Combined Household",
             # 
             
-            TRUE                                        ~ "All Other Household")) %>% 
+            TRUE                                        ~ "All Other Households")) %>% 
       select(SERIALNO, oy_household_full)
     
     return(wide_data)
     
   }
   
-  oy_household_collapse <- function(oy_household){
-    
-    # Collapsing OY-Only
-    # OY-CY ONLY
-    # OY-EE Only
-    
-    out <- 
-      forcats::fct_collapse(
-        .f = oy_household,
-        `OY Household` = c("OY Only Household", 
-                           "OY-CY Only Household", 
-                           "OY-EE Only Household", 
-                           "Combined Household"))
-    
-    return(out)
-    
-    
-  }
+  # oy_household_collapse <- function(oy_household){
+  #   
+  #   # Collapsing OY-Only
+  #   # OY-CY ONLY
+  #   # OY-EE Only
+  #   
+  #   out <- 
+  #     forcats::fct_collapse(
+  #       .f = oy_household,
+  #       `OY Household` = c("OY Only Household", 
+  #                          "OY-CY Only Household", 
+  #                          "OY-EE Only Household", 
+  #                          "Combined Household"))
+  #   
+  #   return(out)
+  #   
+  #   
+  # }
   
   # Run Functions
   message("Tabulating Person-type per household")
