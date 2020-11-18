@@ -95,7 +95,8 @@ figure_helpers <-
     citations = 
       c(IPUMS = "Source: IPUMS USA, University of Minnesota, www.ipums.org.", 
         PUMS  = "Source: U.S. Census Bureau, 2018 American Community Survey 1-Year Estimates"), 
-    suppress = "Percentages less than 5% suppressed for clarity"
+    suppress = "Percentages less than 5% suppressed for clarity", 
+    CI = "Error bars reflect a 95% confidence interval"
     
       
   )

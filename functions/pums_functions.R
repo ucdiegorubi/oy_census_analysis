@@ -359,9 +359,9 @@ categorize_oy_households <- function(pums_data){
           # with none does not exist
           case_when(
             !is.na(opp_youth) & 
-              is.na(connected_youth)                      ~ "OY Only Household", 
+              is.na(connected_youth)                      ~ "Household w/Only OY", 
             !is.na(connected_youth) & 
-              is.na(opp_youth)                            ~ "CY Only Household", 
+              is.na(opp_youth)                            ~ "Household w/Only CY", 
             
             # # oy_only
             # !is.na(opp_youth) &

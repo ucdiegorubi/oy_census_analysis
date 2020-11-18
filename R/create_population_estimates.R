@@ -435,7 +435,7 @@ analysis_data$LAPTOP <-
   
   pums_hh_survey %>% 
   create_estimate(pums_survey = ., 
-                  oy_household_full, HISPEED_label)
+                  oy_household_full, LAPTOP_label)
 
 
 # HOUSEHOLD COMPOSITION 11/17/2020 ----------------------------------------

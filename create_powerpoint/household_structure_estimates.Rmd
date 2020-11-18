@@ -64,6 +64,12 @@ analysis_data[c("household_income_estimates", "household_type")] %<>%
         
         mutate(oy_household = figure_helpers$format_oy_household(oy_household_full)))
 
+analysis_data %<>%
+  modify_at(
+    .at = 'oy_flag', 
+    .f = ~ figure_helpers$format_oy_variable(.)
+  )
+
 ipums_data %<>% 
   map(.f = ~ 
         .x %>% 
@@ -87,7 +93,7 @@ erase_x_legend =
 # Settings for the lower error bar
 # other option is percent_low
 error_bar_setting <- 
-  rlang::sym('percent')
+  rlang::sym('percent_low')
 
 # color contrasts between Connected Youth and Opportunity Youth
 # color_contrast <- 
@@ -171,7 +177,7 @@ single_plot <- function(data, x_col = NULL){
 wrap_x_labels = 
   scale_x_discrete(labels = function(x) str_wrap(x,10))
 
-basic_plot_dodge <- function(data, fill_label = NULL, erase = TRUE){
+basic_plot_dodge <- function(data, fill_label = NULL, erase = FALSE){
   
   fill_col = names(data)[2] %>% rlang::sym()
   
@@ -224,20 +230,40 @@ basic_plot_dodge <- function(data, fill_label = NULL, erase = TRUE){
 
 ### Research Questions of Interest
 
-* Are Opportunity Youth caring for children?
-  - How many Opportunity Youth have at least one child?
-  - How many children do Opportunity Youth have?
-* What are the household income characteristics of Opportunity Youth?
+  - What is each household type, and what is their composition?
+  - What is the average household size for each type of household?
   - What is average household income by household type?
   - What is an Opportunity Youth's average total personal income?
-* What are the mobility characteristics of Opportunity Youth?
+  - What percentage of households are food stamp recipients?
+  - How many youth identify as the reference person?
+  - How many youth have at least one child?
+  - How many youth have multiple children?
+  - What is the household median income for each household type?
+  - What is the median income by Chicago region for reference persons?
+  - What are youth's average total personal income? 
+  
+### Research Questions (cont.)
+
+  - How many youth are married?
+  - How many youth are partnered?
+  - How many households are foodstamp recipients?
+  - What type of households do
+  - What percentage of each household has broadband access?
+  - What percentage of each household has computer access?
   - Have Opportunity Youth moved within the last year?
   - What are Connected Youths' primary form of transportation?
   - What are Connected Youths' average commute time?
-* Pending:
-  - Food Stamps Recipients, Household Types, Number of Workers in Family, Same-Sex Households, Multi-generational Families
-  
+
 # Refresher
+
+### How are Opportunity Youth defined?
+
+- _Opportunity Youth:_ Individuals that are 16 to 24 years old who are simultaneously unemployed/ not in the labor force and not enrolled in school (disconnection)
+- _Connected Youth:_ Individuals that are 16 to 24 years old who are either employed, enrolled in school, or both.
+- _Everyone Else:_ Individuals outside of this age category who may be enrolled in school or employed
+
+
+
 
 ### 14% of 16 - 24 year olds are Opportunity Youth
 
@@ -257,20 +283,15 @@ analysis_data$q1_demographics$total_oy_population %>%
                         figure_helpers$fig_help$newline)) + 
   scale_y_continuous(labels = scales::percent, limits = c(0,1)) + 
   geom_text(aes(label = scales::percent(percent, accurary = .01)), 
-            vjust = 1.4)
+            position = position_stack(vjust = .5))
 
 
 ```
 
-### Definitions: Person Categorizations
 
-**Person-Level:**
+# Results
 
-- _Opportunity Youth:_ Individuals that are 16 to 24 years old who are simultaneously unemployed/ not in the labor force and not enrolled in school (disconnection)
-- _Connected Youth:_ Individuals that are 16 to 24 years old who are either employed, enrolled in school, or both.
-- _Everyone Else:_ Individuals outside of this age category who may be enrolled in school or employed
-
-### Definitions: Household Categorizations
+### How are households categorized?
 
 ```{r}
 
@@ -306,8 +327,135 @@ analysis_data$household_chart %>%
 ```
 
 
+### Opportunity Youth households are more likely to contain 'Everyone Else'
 
-# Results
+```{r}
+
+analysis_data$hh_composition %>%
+  ggplot(aes(x = oy_household_full, y = percent, fill = oy_flag, group = oy_flag)) + 
+  geom_col(position = 'dodge', 
+           color = 'black') + 
+  
+    geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp), 
+            position = position_dodge(width = .95), 
+            width = .2) + 
+  
+  geom_label(aes(
+    label = scales::percent(percent, accuracy = .1)
+                    # y = percent_upp + .03
+    ), 
+    position = position_dodge(width = .9), 
+    size = 2.7, 
+    color = 'black', 
+    fill = 'white') + 
+  
+
+  theme_classic() + 
+  
+  labs(y = "Percent", 
+       x = "Type of Household", 
+       fill = "OY Type") + 
+  wrap_x_labels + 
+  
+  ggsci::scale_fill_uchicago() + 
+  scale_y_continuous(labels = scales::percent)
+
+```
+
+
+
+```{r, eval = F}
+
+### Household Composition: Alternate
+change_zero <- function(vector){
+  
+  vector <- 
+    if_else(is.na(vector), 0, 
+            vector)
+  
+  return(vector)
+  
+}
+
+
+
+analysis_data$household_chart_percent %>%
+  mutate(across(is.double, ~ change_zero(.))) %>% 
+  select(1, 3, 2, 4) %>% 
+  ungroup() %>% 
+  mutate(across(is.double,.fns = ~ scales::percent(., accuracy = .1))) %>% 
+  pretty_flex() %>%
+  flextable::set_header_labels(
+    oy_household_full = "Household Type", 
+    everyone_else = "Everyone Else", 
+    connected_youth = "Connected Youth", 
+    opp_youth = "Opportunity Youth"
+  )
+
+
+```
+
+
+
+
+
+### Less than 3% of households contain only Opportunity Youth
+
+```{r, fig.width = 9}
+ss <- 
+  analysis_data$household_type %>% 
+  select(oy_household_full, n) %>%
+  mutate(label = paste0(oy_household_full, "\n", "N = ", n %>% format(big.mark = ','))) %>%
+  select(oy_household_full, label) %>% 
+  spread(oy_household_full, label) %>% 
+  unlist()
+
+analysis_data$household_type %>% 
+  # filter(oy_household_full != "EE Only Household") %>% 
+  # mutate(oy_household = figure_helpers$format_oy_household(oy_household)) %>% 
+  single_plot(x_col = 'oy_household_full') +
+  geom_label(aes(label = scales::percent(percent, accuracy = .1))) +
+  scale_y_continuous(labels = scales::percent, breaks = c(0, .2,   .4,  .6,  .8)) + 
+  labs(y = "Percent", 
+       caption = paste0(figure_helpers$citations['PUMS'], 
+                        figure_helpers$fig_help$newline, 
+                        figure_helpers$suppress), 
+       x = "Household Type") + 
+  scale_x_discrete(labels = ss) + 
+  theme(axis.text.x = element_text(size = 8)) 
+```
+
+
+
+
+
+### Both Connected Youth and Opportunity Youth live in larger households 
+
+```{r}
+
+analysis_data$num_people_lived_with %>% 
+  ggplot(aes(x = oy_household_full, y = percent)) + 
+  geom_col(color = 'black', 
+           fill = color_contrast[2]) +
+  # geom_point(aes(size = percent_upp, color = oy_household)) +
+  
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp), 
+                width = .2) +
+  geom_label(aes(label = format(percent, digits = 2))) +
+  # geom_segment(aes(x = oy_household, xend = oy_household, y = 0,yend = percent)) + 
+  theme_classic() + 
+  wrap_x_labels + 
+  labs(y = "Average number of people in household", 
+       x = "Type of Household", 
+       size = "Standard Error") + 
+  ggsci::scale_color_uchicago()
+
+
+```
+
+
+
+
 
 
 ### Opportunity Youth are half as likely as Connected Youth to be the reference person
@@ -328,8 +476,7 @@ analysis_data$q2_household$head_of_household_alt %>%
                                                figure_helpers$fig_help$newline, 
                                                figure_helpers$fig_help$N,
                                                (ss[-c(3:4)]) %>% format(big.mark = ','))) + 
-  geom_text(aes(label = scales::percent(percent)), 
-            vjust = 1.4)
+  geom_label(aes(label = scales::percent(percent)))
 ```
 
 
@@ -339,7 +486,14 @@ analysis_data$q2_household$head_of_household_alt %>%
 # children are now individual level so I can say, does a given individual have at least one child?
 
 ipums_data$at_least_one_child %>% 
-  basic_plot_dodge(erase = F) + 
+  mutate(plus_minus = 
+           paste0(scales::percent(percent, suffix = "", accuracy = .1),
+                  " (+/-",
+                  (2*percent_se) %>% scales::percent(suffix = "", accuracy = .1), 
+                  ")")) %>% 
+  # ggplot(aes(x = oy_flag, y = percent, group = at_least_one_child, fill = at_least_one_child)) + 
+  # geom_point() +
+  basic_plot_dodge(erase = F) +
   geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp,
                     group = at_least_one_child),
                 width = .2,
@@ -360,16 +514,18 @@ ipums_data$at_least_one_child %>%
                      figure_helpers$suppress),
     y = "Percent"
   ) + 
-  geom_text(
-    aes(label = 
-          if_else(percent >= 0, 
-                  scales::percent(percent, accuracy = .1),
-                  ""),
-        group = at_least_one_child), 
-    position = position_dodge(width = .9), 
-    size = 4, 
+  geom_label(
+    aes(label =
+          # if_else(percent >= 0,
+          #         scales::percent(percent, accuracy = .1),
+          #         ""),
+          scales::percent(percent, suffix = "", accuracy = .1),
+        # y = percent_upp + .02,
+        group = at_least_one_child),
+    position = position_dodge(width = .9),
+    # size = 4,
     color = 'black', 
-    vjust = 1.29
+    fill = 'white'
   )
   
 
@@ -402,9 +558,9 @@ ipums_data$at_least_one_child %>%
 ipums_data$percent_children %>% 
   filter(oy_flag != "everyone_else") %>% 
   basic_plot_dodge(erase = FALSE) + 
-  geom_errorbar(aes(ymin = percent, ymax = percent_upp,
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp,
                     group = NCHILD),
-                width = .5,
+                width = .2,
                 position = position_dodge(.9)) + 
   # geom_text(aes(label = scales::percent(percent, accuracy = .1), 
   #               group = NCHILD), 
@@ -416,16 +572,17 @@ ipums_data$percent_children %>%
     fill = "Number of Children", 
     y = "Percent"
   ) + 
-  geom_text(
+  geom_label(
     aes(label = 
           if_else(percent > .05, 
                   scales::percent(percent, accuracy = .1),
                   ""),
         group = NCHILD), 
     position = position_dodge(width = .9), 
-    size = 4, 
-    color = 'white', 
-    vjust = 1.4
+    size = 2.5, 
+    color = 'black', 
+    fill = 'white'
+    # vjust = 1.4
   ) + 
   ggsci::scale_fill_uchicago(palette = 'default')
 
@@ -433,117 +590,6 @@ ipums_data$percent_children %>%
 
 ```
 
-### Less than 3% of households contain only Opportunity Youth
-
-```{r, fig.width = 9}
-ss <- 
-  analysis_data$household_type %>% 
-  select(oy_household_full, n) %>%
-  mutate(label = paste0(oy_household_full, "\n", "N = ", n %>% format(big.mark = ','))) %>%
-  select(oy_household_full, label) %>% 
-  spread(oy_household_full, label) %>% 
-  unlist()
-
-analysis_data$household_type %>% 
-  # filter(oy_household_full != "EE Only Household") %>% 
-  # mutate(oy_household = figure_helpers$format_oy_household(oy_household)) %>% 
-  single_plot(x_col = 'oy_household_full') +
-  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
-                y = percent_upp + .021)) +
-  scale_y_continuous(labels = scales::percent, breaks = c(0,.1, .2, .3, .4, .5, .6, .7, .8)) + 
-  labs(y = "Percent", 
-       caption = paste0(figure_helpers$citations['PUMS'], 
-                        figure_helpers$fig_help$newline, 
-                        figure_helpers$suppress), 
-       x = "Household Type") + 
-  scale_x_discrete(labels = ss) + 
-  theme(axis.text.x = element_text(size = 8)) 
-```
-
-
-
-
-### Opportunity Youth households are more likely to contain 'Everyone Else'
-
-```{r}
-
-analysis_data$hh_composition %>%
-  ggplot(aes(x = oy_household_full, y = percent, fill = oy_flag, group = oy_flag)) + 
-  geom_col(position = 'dodge', 
-           color = 'black') + 
-  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
-                    y = percent_upp + .03), 
-                position = position_dodge(width = .9), 
-            size = 2.7) + 
-  geom_errorbar(aes(ymin = percent_low, ymax = percent_upp), 
-            position = position_dodge(width = .95), 
-            width = .2) + 
-  theme_classic() + 
-  scale_y_continuous(labels = scales::percent) + 
-  labs(y = "Percent", 
-       x = "OY Household", 
-       fill = "OY Type") + 
-  wrap_x_labels + 
-  ggsci::scale_fill_uchicago()
-
-```
-
-### Household Composition: Alternate
-
-```{r}
-change_zero <- function(vector){
-  
-  vector <- 
-    if_else(is.na(vector), 0, 
-            vector)
-  
-  return(vector)
-  
-}
-
-
-
-analysis_data$household_chart_percent %>%
-  mutate(across(is.double, ~ change_zero(.))) %>% 
-  select(1, 3, 2, 4) %>% 
-  ungroup() %>% 
-  mutate(across(is.double,.fns = ~ scales::percent(., accuracy = .1))) %>% 
-  pretty_flex() %>%
-  flextable::set_header_labels(
-    oy_household_full = "Household Type", 
-    everyone_else = "Everyone Else", 
-    connected_youth = "Connected Youth", 
-    opp_youth = "Opportunity Youth"
-  )
-
-
-```
-
-
-
-### Both Connected Youth and Opportunity Youth live in larger households 
-
-```{r}
-
-analysis_data$num_people_lived_with %>% 
-  ggplot(aes(x = oy_household_full, y = percent)) + 
-  geom_col(color = 'black', 
-           fill = color_contrast[2]) +
-  # geom_point(aes(size = percent_upp, color = oy_household)) +
-  geom_text(aes(label = format(percent, digits = 2), 
-                y = percent_upp + .12)) +
-  geom_errorbar(aes(ymin = percent_low, ymax = percent_upp), 
-                width = .2) +
-  # geom_segment(aes(x = oy_household, xend = oy_household, y = 0,yend = percent)) + 
-  theme_classic() + 
-  wrap_x_labels + 
-  labs(y = "Average number of people in household", 
-       x = "OY Household", 
-       size = "Standard Error") + 
-  ggsci::scale_color_uchicago()
-
-
-```
 
 
 
@@ -562,8 +608,10 @@ analysis_data$household_type_median_income %>%
   geom_hline(yintercept = analysis_data$chicago_household_median_income$percent, 
              linetype = 'dotted') + 
   theme_classic() + 
-  geom_text(aes(label = scales::dollar(percent)), 
-            position = position_stack(vjust = .5)) + 
+  geom_label(aes(label = scales::dollar(percent)), 
+             color = 'black', 
+             fill = 'white', 
+             size = 2.5) + 
   # labs( y = "Average Number of Children") + 
   erase_x_legend + 
   theme(axis.text.x = element_text(face = 'bold')) + 
@@ -591,13 +639,19 @@ analysis_data$median_income_hh_by_puma_region %>%
   filter(str_detect(oy_hh_flag, "(Connected)")) %>% 
   ggplot(aes(x = PUMA_region, y = n)) + 
   geom_col(aes(fill = oy_hh_flag), 
-           position = 'dodge') + 
+           position = 'dodge', 
+           color = 'black') + 
   geom_errorbar(aes(ymin = n_low, ymax = n_upp, group = oy_hh_flag), 
                 width = .2, 
                 linetype = 'dashed', 
                 position = position_dodge(width = .9)) +
-  # facet_wrap(~oy_hh_flag, 
-  #            scales = 'free') +
+  geom_label(aes(label = scales::dollar(n), 
+                group = oy_hh_flag), 
+            position = position_dodge(width = .9), 
+            color = 'black', 
+            fill = 'white', 
+            size = 2.5) +
+
   scale_y_continuous(labels = scales::dollar) + 
   theme_classic() + 
   labs(y = "Median Income", 
@@ -667,11 +721,12 @@ analysis_data$hh_income_bracket %>%
 
 
 
-### Opportunity Youth are more likely than Connected Youth to be married
-```{r}
+### Opportunity Youth are unlikely to be in a relationship
+```{r, fig.width = 10}
 
 # person level
-analysis_data$q2_household$married %>% 
+p1 <- 
+  analysis_data$q2_household$married %>% 
   basic_plot_dodge(erase = F) + 
   labs(fill = "Marital Status", 
        caption = paste0(figure_helpers$citations['PUMS'], 
@@ -680,36 +735,29 @@ analysis_data$q2_household$married %>%
        y = "Percent") + 
   wrap_x_labels  + 
   scale_fill_manual(values = c(color_contrast_alt[2], rev(color_palette(5)))) + 
-  geom_errorbar(aes(ymin = percent, ymax = percent_upp,
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp,
                     group = MAR_label),
-                width = .5,
+                width = .2,
                 position = position_dodge(.9)) + 
-  geom_text(
+  geom_label(
     aes(label = 
           if_else(percent > .05, 
                   scales::percent(percent, accuracy = .1),
-                  ""),
+                  NULL),
         group = MAR_label), 
     position = position_dodge(width = .9), 
-    size = 4, 
+    size = 2.5, 
     color = 'black', 
-    vjust = 1.4
+    fill = "white"
   )
-  
 
-
-
-```
-
-### Partnered Status
-
-```{r}
 # person level
-analysis_data$q2_household$partnered %>% 
+p2 <- 
+  analysis_data$q2_household$partnered %>% 
   basic_plot_dodge(erase = F) + 
-  geom_errorbar(aes(ymin = percent, ymax = percent_upp,
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp,
                     group = PARTNER_label),
-                width = .5,
+                width = .2,
                 position = position_dodge(.9)) + 
   labs(fill = "Unmarried partner household", 
        caption = paste0(figure_helpers$citations['PUMS'], 
@@ -718,21 +766,29 @@ analysis_data$q2_household$partnered %>%
        y = "Percent") + 
   wrap_x_labels  + 
   ggsci::scale_fill_uchicago() + 
-  geom_text(
+  geom_label(
     aes(label = 
           if_else(percent > .05, 
                   scales::percent(percent, accuracy = .1),
-                  ""),
+                  NULL),
         group = PARTNER_label), 
     position = position_dodge(width = .9), 
-    size = 3, 
+    size = 2.5, 
     color = 'black', 
-    vjust = 1.4
+    fill = 'white'
   )
   
+
+p1
+
+
+
 ```
 
 
+```{r}
+p2
+```
 
 
 ### Opportunity Youth are more likely to have lived in the same house the prior year
@@ -749,19 +805,19 @@ analysis_data$q2_household$migration %>%
        y = "Percent") + 
   wrap_x_labels + 
   scale_fill_manual(values = c(color_palette(3), color_contrast_alt[2])) + 
-  geom_errorbar(aes(ymin = percent, ymax = percent_upp), 
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp), 
                 position = position_dodge(width = .9),
-                width = .3) + 
-  geom_text(
+                width = .2) + 
+  geom_label(
     aes(label = 
           if_else(percent > .05, 
                   scales::percent(percent, accuracy = .1),
-                  ""),
+                  NULL),
         group = MIG_label), 
     position = position_dodge(width = .9), 
-    size = 4, 
-    color = 'white', 
-    vjust = 1.4
+    size = 2.5, 
+    color = 'black', 
+    fill = 'white'
   )
 
 ```
@@ -782,14 +838,16 @@ analysis_data$q2_household$transportation_mode %>%
   wrap_x_labels + 
   geom_errorbar(aes(ymin = percent, ymax = percent_upp), 
                 position = position_dodge(width = .9),
-                width = .3) + 
+                width = .2) + 
   scale_fill_manual(values = c(color_palette(9), color_palette_light(9))) + 
-  geom_text(aes(label = if_else(percent > .05, 
+  geom_label(aes(label = if_else(percent > .05, 
                                 scales::percent(percent, accuracy = .1), 
-                                "")), 
+                                NULL)), 
             position = position_dodge(width = .9), 
-            vjust = 1.4, 
-            size = 3)
+            
+            size = 2.5, 
+            color = 'black', 
+            fill = 'white')
 
 ```
 
@@ -809,7 +867,7 @@ analysis_data$q2_household$commute_bracket %>%
   wrap_x_labels + 
   geom_errorbar(aes(ymin = percent, ymax = percent_upp),
                 position = position_dodge(width = .9),
-                width = .3) + 
+                width = .2) + 
   scale_fill_viridis(discrete = TRUE)
 
 
@@ -823,13 +881,17 @@ analysis_data$q2_household$commute_bracket %>%
 # household level
 analysis_data$foodstamps_per_household %>% 
   basic_plot_dodge() + 
-  geom_errorbar(aes(ymin = percent, ymax = percent_upp), 
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp), 
                 position = position_dodge(width = .9), 
                 width = .2) +
-  geom_text(aes(label = scales::percent(percent, accuracy = .1), y = percent - .02), 
-            position = position_dodge(width = 1)) + 
+  geom_label(aes(label = scales::percent(percent, accuracy = .1)), 
+            position = position_dodge(width = 1), 
+            color = 'black', 
+            fill = 'white', 
+            size = 2.5)+ 
   labs(fill = "Food Stamp Recipient", 
-       caption = figure_helpers$citations['PUMS']) +
+       caption = figure_helpers$citations['PUMS'], 
+       y = 'Percent') +
   wrap_x_labels + 
   scale_fill_manual(values = color_contrast_alt) 
 
@@ -844,17 +906,23 @@ analysis_data$foodstamps_per_household %>%
 ```{r, eval = T}
 # household level
 analysis_data$hht %>% 
-  filter(oy_household_full != "All Other Household") %>% 
+  filter(oy_household_full != "All Other Households") %>%
   mutate(HHT_label = fct_reorder(HHT_label, percent)) %>% 
+  
   basic_plot_dodge() + 
   geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp, group = HHT_label), 
                 position = position_dodge(width = .9), 
                 width = .2) +
-  geom_text(aes(label = scales::percent(percent, suffix = "", accuracy = .1), group = HHT_label), 
-            size = 2.7, 
-            vjust = 1.25,
+  geom_label(aes(label =if_else(percent > .05, 
+                               scales::percent(percent, suffix = "", accuracy = .1), 
+                               NULL),
+                group = HHT_label), 
+            size = 2.5, 
+            color = 'black', 
+            fill = 'white',
             position = position_dodge(width = .9)) +
-  labs(fill = "Type of Household") + 
+  labs(fill = "Type of Household", 
+       y = 'Percent') + 
   scale_fill_manual(values = c(color_contrast[2], color_palette(8)), 
                     labels = function(x) str_wrap(x,30)) + 
   theme(
@@ -862,6 +930,57 @@ analysis_data$hht %>%
 
   
 
+
+
+```
+
+
+### OY Only Households are less likely to have access to broadband internet
+
+```{r}
+
+analysis_data$HISPEED_internet %>% 
+  basic_plot_dodge() + 
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp, group = HISPEED_label), 
+                width = .2, 
+                
+                position = position_dodge(width = .9)) + 
+  geom_label(aes(label = scales::percent(percent, suffix = "", accuracy = .1), 
+                group = HISPEED_label), 
+            position = position_dodge(width = .9), 
+            color = 'black', 
+            fill = 'white', 
+            size = 2.5) + 
+  ggsci::scale_fill_uchicago() + 
+  labs(
+    y = "Percent", 
+    fill = "Broadband Access"
+  )
+
+```
+
+
+### OY Only Households are less likely to have laptop access
+
+```{r}
+analysis_data$LAPTOP %>%
+  filter(percent != 0) %>% 
+  basic_plot_dodge() + 
+  geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp, 
+                    group = LAPTOP_label), 
+                width = .2, 
+                position = position_dodge(width = .9)) + 
+  geom_label(aes(label = 
+                   scales::percent(percent, accuracy = .1, suffix = "")), 
+                 color = 'black', 
+                 fill = 'white', 
+                 size = 2.5, 
+            position = position_dodge(width = .9)) + 
+  ggsci::scale_fill_uchicago() + 
+  labs(
+    y = "Percent", 
+    fill = "Laptop Availability"
+  )
 
 
 ```
@@ -909,6 +1028,10 @@ analysis_data$multigen %>%
 
 
 ```
+
+
+
+
 
 
 
