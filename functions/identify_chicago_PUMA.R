@@ -21,7 +21,7 @@ identify_chicago_pumas <- function(pums_data){
   
   pums_data <- 
     pums_data %>% 
-    mutate(
+    dplyr::mutate(
       chicago_puma_flag = 
         PUMA %in% puma_crosswalk
     )

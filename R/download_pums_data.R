@@ -56,7 +56,8 @@ check_pums_variables <- function(){
   # variables that we're interested in 
   pums_vars = get_pums_variables()
   
-  # variables available in PUMS files through tidycensus
+  # variables available in PUMS files through tidycensus for the file 
+  # we're interested in
   vars_available = 
     tidycensus::pums_variables %>% 
     filter(
@@ -96,15 +97,20 @@ helper_functions$check_for_directory('raw_data')
 check_pums_variables()
 
 # this is really not the best way to do this
+# but extracts API key from the configuration file and loads it prior to making the 
+# api call to the Census
 load_api_key()
 
-message("Illinois PUMS dataset does not exist. Downloading.")
-
+message("Downloading PUMS data")
 pums_df <- load_data$download_pums_data(state_config = pums_config$state, 
                                         year_config = pums_config$year, 
                                         survey_config = pums_config$survey,
                                         recode_config = pums_config$recode,
                                         rep_weight_config = pums_config$rep_weights)
+
+
+# WRITE DATA --------------------------------------------------------------
+
 
 write_csv(
   x = pums_df, 

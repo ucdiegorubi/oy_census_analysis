@@ -19,7 +19,8 @@ walk(
   .x = 
     list.files(
       path = here::here('functions'), 
-      full.names = TRUE
+      full.names = TRUE, 
+      pattern = ".R"
     ), 
   .f = 
     ~ source(.)

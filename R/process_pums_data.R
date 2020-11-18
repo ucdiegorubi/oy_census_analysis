@@ -28,13 +28,40 @@ pums_df <-
   identify_opportunity_youth(pums_data = pums_df)
 
 pums_df <- 
+  # we want to limit our analysis to only chicago
+  # This uses a crosswalk for PUMAS and various geographic areas to identify the 
+  # PUMAS encompassing Chicago. There are 17 of them. 
   identify_chicago_pumas(pums_data = pums_df)
 
 pums_df <- 
+  create_puma_regions(pums_data = pums_df)
+
+# creates a new race variable that is, unfortunately, more succinct but also inclusive
+# of hispanic as a value for the race variable 
+# The next two functions are located in functions/pums_functions.R
+pums_df <- 
   recategorize_race(pums_data = pums_df)
+
+# adds various other indicators
+#   age
+#   income brackets
+#   age brackets
+#   presence of at least one child
+#   converts total personal income to adjusted income (constant dollars)
+#   identifies head of household
 
 pums_df <- 
   add_other_indicators(pums_data = pums_df)
+
+# categorize households into either non-opportunity youth households, 
+# opportunity youth households (which will contain oy and maybe or maybe not an 
+# everyone else), and opportunity youth and connected youth households containing 
+# at least one of each
+pums_df <- 
+  categorize_oy_households(pums_data = pums_df)
+
+
+  
 
 
 # WRITE DATA --------------------------------------------------------------

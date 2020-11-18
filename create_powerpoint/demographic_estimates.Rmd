@@ -1,8 +1,10 @@
 ---
 title: "Opportunity Youth Population Estimates and Demographics (Preliminary)"
 author: "Diego Rubi"
-date: "9/22/2020"
-output: powerpoint_presentation
+date: " `r format(Sys.Date(),'%B %d, %Y')`"
+output: 
+  powerpoint_presentation:
+      reference_doc: reference_ppt.pptx
   
 ---
 
@@ -29,7 +31,10 @@ source(
 ```{r load-data}
 
 analysis_data <- 
-  load_data$load_population_estimates()[['q1_demographics']]
+  load_data$load_population_estimates()
+
+ipums_data <- 
+  load_data$load_IPUMS_population_estimates()
 
 ```
 
@@ -37,12 +42,13 @@ analysis_data <-
 ```{r formatting, include = F}
 
 
-analysis_data <- 
+analysis_data$q1_demographics <- 
   imap(
-    .x = analysis_data, 
+    .x = analysis_data$q1_demographics, 
     .f = ~ 
       if(.y %in% c("total_population_age_bracket", 
-                   'geo_puma_pop')){
+                   'geo_puma_pop', 
+                   'geo_puma_pop_percent')){
         .x 
       }else{
         .x %>% 
@@ -54,9 +60,23 @@ analysis_data <-
       }
   )
 
-analysis_data$q2_household <- 
-  modify(.x = analysis_data$q2_household, 
-         .f = ~.x %>% mutate(oy_flag = figure_helpers$format_oy_variable(oy_flag)))
+analysis_data$q2_household <-
+  
+  map(analysis_data$q2_household, 
+      .f = ~ 
+        .x %>% 
+        modify_at(.x = .,
+            .at = 'oy_flag',
+            .f =  figure_helpers$format_oy_variable))
+
+# analysis_data$q1_demographics <- 
+#   
+#   map(analysis_data$q1_demographics, 
+#       .f =  ~
+#         .x %>% 
+#         modify_at(.x = ., 
+#                   .at = 'oy_flag', 
+#                   .f = figure_helpers$format_oy_variable))
 
 erase_axis = 
    theme(
@@ -80,8 +100,6 @@ color_contrast <-
   c(`Connected Youth` = "#767676", `Opportunity Youth` = '#D5802B')
 
 ```
-
-
 
 
 ## Today's Agenda
@@ -108,14 +126,14 @@ color_contrast <-
 ## About 12% of Chicago's population is within 16 and 24 years of age
 
 ```{r}
-age_population <- analysis_data$total_population_age_bracket %>% select(age_bracket, n) %>% spread(key = age_bracket, value = n) %>% unlist()
+age_population <- analysis_data$q1_demographics$total_population_age_bracket %>% select(age_bracket, n) %>% spread(key = age_bracket, value = n) %>% unlist()
 ```
 
 
 ```{r}
 
 
-analysis_data$total_population_age_bracket %>% 
+analysis_data$q1_demographics$total_population_age_bracket %>% 
   
   ggplot(aes(x = age_bracket, y = percent)) + 
   geom_col(width = .85, 
@@ -145,7 +163,7 @@ theme_classic() +
 ```{r}
 total_sample <- 
   
-  analysis_data$total_oy_population %>% 
+  analysis_data$q1_demographics$total_oy_population %>% 
   select(oy_flag, n) %>% 
   arrange(oy_flag) %>% 
   pivot_wider(names_from = oy_flag, values_from = n) %>% 
@@ -159,7 +177,7 @@ total_sample <-
 
 
 
-analysis_data$total_oy_population %>% 
+analysis_data$q1_demographics$total_oy_population %>% 
   # filter(oy_flag != "Everyone Else") %>% 
   
   ggplot(aes(x = oy_flag, 
@@ -196,7 +214,7 @@ analysis_data$total_oy_population %>%
 ## More than half of all Opportunity Youth are Black, Non-Hispanic 
 
 ```{r race, echo = F, eval = F}
-analysis_data$oy_race %>% 
+analysis_data$q1_demographics$oy_race %>% 
   ggplot(aes(x = oy_flag, 
          y = percent)) + 
   geom_col(
@@ -226,7 +244,7 @@ analysis_data$oy_race %>%
 
 ```{r race-alterante}
 
-analysis_data$oy_race_alternate %>% 
+analysis_data$q1_demographics$oy_race_alternate %>% 
   ggplot(aes(x = oy_flag, y = percent)) + 
   geom_col(aes(fill = race_alternate), 
            width = .5)+ 
@@ -256,7 +274,7 @@ analysis_data$oy_race_alternate %>%
 ```{r}
 
 
-analysis_data$oy_race_alternate %>% 
+analysis_data$q1_demographics$oy_race_alternate %>% 
   ggplot(aes(x = oy_flag, 
          y = percent)) + 
   geom_col(aes(fill = race_alternate), 
@@ -303,7 +321,7 @@ analysis_data$oy_race_alternate %>%
 
 # Male
 
-analysis_data$oy_sex %>% 
+analysis_data$q1_demographics$oy_sex %>% 
   filter(SEX_label != "Female") %>% 
   ggplot(aes(x = oy_flag, 
              y = percent)) + 
@@ -336,9 +354,11 @@ analysis_data$oy_sex %>%
 ```
 
 
+## Nearly 13% of Opportunity Youth report having a disability
+
 ```{r disability}
 
-analysis_data$oy_disability %>% 
+analysis_data$q1_demographics$oy_disability %>% 
   filter(DIS_label == "With a disability") %>%
   ggplot(aes(x = oy_flag,y = percent)) + 
   geom_col(aes(fill = oy_flag),
@@ -371,7 +391,7 @@ analysis_data$oy_disability %>%
 
 
 ```{r age-brackets}
-analysis_data$oy_age_bracket %>% 
+analysis_data$q1_demographics$oy_age_bracket %>% 
   filter(oy_flag != "Everyone Else", 
          age_bracket != "16-19") %>% 
   ggplot(aes(x = oy_flag, 
@@ -408,106 +428,57 @@ analysis_data$oy_age_bracket %>%
 
 ```
 
-## Educational Attainment
+## Half of Opportunity Youth have graduated from high school
 
 ```{r}
-analysis_data$oy_edu_attainment %>% 
+analysis_data$q1_demographics$oy_edu_attainment %>% 
   filter(oy_flag != "Everyone Else") %>% 
+  mutate(school_attainment = figure_helpers$format_education_variable(school_attainment)) %>% 
   ggplot(aes(x = oy_flag, y = percent)) + 
-  geom_col(aes(fill = SCHL_label)) + 
+  geom_col(aes(fill = school_attainment)) + 
   theme_classic() + 
   labs(
     fill = "Educational Attainment", 
-    y = "Percent"
+    y = "Percent", 
+    caption = "Cells representing less than 5% suppressed for clarity"
   ) + 
   erase_axis + 
   theme(axis.title.x = element_blank()) + 
   geom_text(aes(label = if_else(percent > .05, 
                                 scales::percent(percent, accuracy = .1), 
                                 ""), 
-                group = SCHL_label), 
-            position = position_stack(vjust = .5))
+                group = school_attainment), 
+            position = position_stack(vjust = .5)) + 
+  scale_fill_manual(values = c(ggsci::pal_uchicago('default')(9), "salmon1"))
 
 
 
 
-```
-
-
-
-## Race & Gender
-
-
-
-```{r, eval = F}
-
-analysis_data$oy_race_gender %>% 
-  ggplot(aes(x = oy_flag, 
-             y = percent)) + 
-  geom_col(aes(fill = SEX_label)) + 
-  facet_wrap(~race_ethnicity, 
-             scales = 'free_y') + 
-  scale_y_continuous(labels = scales::percent) + 
-  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
-                group = SEX_label), 
-            position = position_stack(vjust = .5), 
-            size = 3) + 
-  theme_classic() + 
-  theme( strip.background = element_blank(), 
-         # strip.text.x = element_text(face = 'bold'), 
-         axis.title.x = element_blank()) + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 10)) + 
-  labs(fill = "Gender")
-  
-
-
-
-```
-```{r}
-
-
-analysis_data$oy_race_gender_alternate %>% 
-  # filter(SEX_label != "Female") %>% 
-  ggplot(aes(x = race_alternate, 
-             y = percent)) + 
-  geom_col(aes(fill = SEX_label)) + 
-  facet_wrap(~oy_flag) + 
-  coord_flip() + 
-  theme_classic() + 
-  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
-                group = SEX_label), 
-            size = 2, 
-            position = position_stack(vjust= .5)) + 
-  scale_y_continuous(labels = scales::percent) + 
-  theme(
-    strip.background = element_blank(), 
-    strip.text.x = element_text(face = 'bold'), 
-    axis.line.x = element_blank(), 
-    axis.text.x = element_blank(), 
-    axis.ticks.x = element_blank()
-  ) + 
-  labs(
-    x = "Race", 
-    y = "Percentage", 
-    fill = "Sex"
-  ) + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 20)) + 
-  scale_fill_manual(values = 
-                      c(
-                        "#fff7bc",
-                        "#D5802B"
-                      )) + 
-  guides(
-    # fill = FALSE
-    )
 
 
 ```
 
 
+
+## Most Opportunity Youth across nearly all races identify as male
 
 ```{r}
-analysis_data$oy_race_gender_alternate %>% 
+ss <- 
+  analysis_data$q1_demographics$oy_race_alternate %>% 
+  group_by(race_alternate) %>% 
+  summarize(n = sum(n)) %>% 
+  mutate(
+    label = paste0(race_alternate, 
+                   "\n", 
+                   "N = ", 
+                   n %>% format(big.mark = ','))
+  ) %>% 
+  select(race_alternate, label) %>% 
+  spread(race_alternate, label) %>% 
+  unlist()
+
+
+analysis_data$q1_demographics$oy_race_gender_alternate %>% 
   filter(SEX_label != "Female") %>%
   ggplot(aes(x = race_alternate, 
              y = percent)) + 
@@ -516,9 +487,12 @@ analysis_data$oy_race_gender_alternate %>%
   facet_wrap(~oy_flag) + 
   coord_flip() + 
   theme_classic() + 
-  geom_text(aes(label = scales::percent(percent, accuracy = .1), 
+  geom_text(aes(label = paste0(scales::percent(percent, accuracy = .1),
+                               figure_helpers$fig_help$newline, 
+                               figure_helpers$fig_help$N, 
+                               n %>% format(big.mark = ',')),
                 group = SEX_label), 
-            size = 2, 
+            size = 3, 
             position = position_stack(vjust= .5)) + 
   scale_y_continuous(labels = scales::percent) + 
   theme(
@@ -530,10 +504,10 @@ analysis_data$oy_race_gender_alternate %>%
   ) + 
   labs(
     x = "Race", 
-    y = "Percentage and Race of ", 
+    y = "", 
     fill = "Sex"
   ) + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 20)) + 
+  scale_x_discrete(labels = ss) + 
   scale_fill_manual(values = 
                       c(
                         # "#fff7bc",
@@ -548,7 +522,7 @@ analysis_data$oy_race_gender_alternate %>%
 
 
 
-```{r}
+```{r, eval = F}
 
 analysis_data$oy_race_gender_alternate %>% 
   filter(SEX_label != "Female") %>% 
@@ -565,24 +539,184 @@ analysis_data$oy_race_gender_alternate %>%
 
 
 
-## Population by PUMA
+## Opportunity Youth are concentrated on South Side and West Side Chicago
 
 ```{r, eval = T}
+chicago_map <- 
+  MapChi::CAs %>% 
+  sf::st_as_sf()
 
-analysis_data$geo_puma_pop %>% 
+analysis_data$q1_demographics$geo_puma_pop_percent %>% 
   ggplot() + 
-  geom_sf(aes(fill = opp_youth)) + 
+  geom_sf(aes(fill = opp_youth * 100), 
+          colour = NA) + 
+  geom_sf(data = chicago_map,
+          fill = NA,
+          color = alpha('grey', .4),
+          inherit.aes = FALSE) +
+
   geom_sf_text(label = 
-                  analysis_data$geo_puma_pop$opp_youth, 
-               size = 1.8) + 
-  theme_void() + 
+                  analysis_data$q1_demographics$geo_puma_pop_percent$opp_youth %>% 
+                 scales::percent(accuracy = .1), 
+               size = 2.6, 
+               color = 'black') + 
+ 
+  theme_void() +
   scale_fill_gradient(low = "#fff7bc",
                       high = "#D5802B",
                       na.value = "white") + 
   labs(fill = 
-         "Opportunity Youth Population")
+         str_wrap("Percentage of Youth that are Opportunity Youth", 30)) + 
+  scale_y_continuous(labels = scales::percent)
+  
 
 
+
+```
+
+
+```{r, include = F}
+
+puma_sf <- 
+  analysis_data$q1_demographics$geo_puma_pop %>% 
+  tigris::geo_join(spatial_data = ., 
+                   data_frame = 
+                     analysis_data$employed_by_puma %>% 
+                     ungroup() %>% 
+                     distinct(PUMA_region, PUMA) %>% 
+                     mutate(across(everything(), ~ as.character(.))),by_sp = 'PUMACE10', by_df = "PUMA")
+
+puma_reference_map <- 
+  
+  puma_sf %>% 
+  ggplot() + 
+  geom_sf(aes(fill = PUMA_region), 
+          alpha = .5) + 
+  geom_sf_text(mapping = aes(label = PUMACE10), 
+               size = 2.5) +
+  ggsci::scale_fill_uchicago() + 
+  theme_classic() + 
+  theme(
+    axis.ticks = element_blank(), 
+    axis.line = element_blank(), 
+    axis.text = element_blank(), 
+    axis.title = element_blank(),
+    legend.position = 'none'
+  ) + 
+  labs(
+    fill = "Chicago Region"
+  )
+
+
+
+```
+
+
+## OY by PUMA
+
+```{r}
+analysis_data$q1_demographics$puma_oy_population %<>%
+  left_join(
+    analysis_data$employed_by_puma %>% ungroup() %>% select(PUMA_region, PUMA) %>% mutate_all(as.character) %>% distinct(), 
+    by = "PUMA"
+  )
+
+analysis_data$q1_demographics$puma_oy_population %>% 
+  filter(oy_flag == "Opportunity Youth") %>% 
+  ggplot(aes(x = fct_reorder(PUMA,percent), y = percent, fill = PUMA_region)) + 
+  geom_col() + 
+  geom_text(aes(label = scales::percent(percent, accuracy = .1, suffix = ""), 
+                y = percent - .02)) +
+  geom_errorbar(aes(ymin = !!error_bar_low, ymax = percent_upp), 
+                linetype = 'dashed', 
+                width = .2) +
+  # scale_fill_manual(values = color_contrast) +
+  ggsci::scale_fill_uchicago() +
+  scale_y_continuous(labels = scales::percent) +
+  theme_classic() + 
+  theme(
+    legend.position = 'bottom'
+  ) + 
+  labs(y = "Percent", 
+       x = "PUMA", 
+       fill = "Chicago Region")
+```
+
+
+
+
+## Southside connected youth are less likely to be employed
+
+```{r, fig.height = 5, fig.width = 10}
+
+# analysis_data$employed_by_puma %>% 
+#   filter(oy_flag == "connected_youth", 
+#          employment_label == "Employed") %>% 
+#   ggplot(aes(x = fct_reorder(PUMA,percent), y = percent)) + 
+#   geom_point(aes(size = n))+ 
+#   geom_errorbar(aes(ymin = percent_low, ymax = percent_upp), 
+#                 width = .2, 
+#                 linetype = 'dashed')+ 
+#   scale_y_continuous(labels = scales::percent) +
+#   theme_classic() + 
+#   coord_flip()
+plot_chart <- 
+  analysis_data$employed_by_puma %>% 
+  filter(oy_flag == "connected_youth", 
+         employment_label == 'Employed') %>% 
+  ggplot(aes(x = fct_reorder(PUMA, percent), y = percent, fill = PUMA_region)) + 
+  geom_col() + 
+  geom_errorbar(aes(ymin = !!error_bar_low, ymax = percent_upp), 
+                width = .2, 
+                linetype = 'dashed') +
+  geom_text(aes(label = scales::percent(percent, suffix = "", accuracy = .1), 
+                y = percent - .04))+ 
+  theme_classic() + 
+  scale_y_continuous(labels = scales::percent) + 
+  labs(y = "Percent", 
+       x = "PUMA", 
+       fill = "Chicago Region") + 
+  theme(
+    legend.position = 'bottom'
+  ) +
+  ggsci::scale_fill_uchicago() + 
+  coord_flip()
+
+
+cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/4, 3/4), rel_widths = c(2/5,3/5))
+  
+  
+
+
+```
+
+## Westside connected youth are less likely to be enrolled in school 
+
+```{r, fig.height = 5, fig.width = 10}
+
+plot_chart <- 
+  analysis_data$school_youth_attendance_by_puma %>% 
+  filter(oy_flag == "connected_youth", 
+         school_label == "Attending School") %>% 
+  ggplot(aes(x = fct_reorder(PUMA, percent), y = percent, fill = PUMA_region)) + 
+  geom_col() + 
+  geom_errorbar(aes(ymin = !!error_bar_low, ymax = percent_upp), 
+                width = .2, 
+                linetype = 'dashed') + 
+  geom_text(aes(label = scales::percent(percent, accuracy = .1, suffix = ""), 
+                y = percent - .04))+ 
+  theme_classic() + 
+  scale_y_continuous(labels = scales::percent, limits = c(0,1)) + 
+  labs(y = "Percent", 
+       x = "PUMA", 
+       fill = "Chicago Region") + 
+  theme(
+    legend.position = 'bottom'
+  ) +
+  ggsci::scale_fill_uchicago() + 
+  coord_flip()
+
+cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/4, 3/4), rel_widths = c(2/5,3/5))
 
 ```
 
