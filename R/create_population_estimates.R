@@ -319,7 +319,7 @@ analysis_data$oy_personal_median_income <-
 analysis_data$question_2$travel_time_to_work <- 
   # we want to omit students connected youth that are attending school
   pums_survey %>% 
-  filter(!(oy_flag == "connected_youth" & school_label == "Not Attending School")) %>% 
+  filter(!(oy_flag == "connected_youth" & school_label == "Attending School")) %>% 
   numeric_estimate(pums_survey = ., 
                    count_col = !!(rlang::sym("JWMNP")), 
                    oy_flag)
@@ -327,7 +327,7 @@ analysis_data$question_2$travel_time_to_work <-
   
 analysis_data$question_2$transportation_mode <- 
   pums_survey %>% 
-  filter(!(oy_flag == "connected_youth" & school_label == "Not Attending School")) %>% 
+  filter(!(oy_flag == "connected_youth" & school_label == "Attending School")) %>% 
   create_estimate(pums_survey = ., 
                   oy_flag, 
                   JWTR_label)
@@ -524,7 +524,7 @@ analysis_data$median_income_hh_by_puma <-
   pums_survey %>% 
   group_by(PUMA_region, PUMA, oy_hh_flag) %>% 
   summarize(
-    n = survey_mean(adjusted_income, vartype = c('se'))
+    n = survey_median(adjusted_income, vartype = c('se'))
   ) %>% 
   mutate(n_upp = n + (1.96*n_se), 
          n_low = n - (1.96*n_se))
@@ -551,7 +551,7 @@ analysis_data$median_income_hh_by_puma_region <-
   pums_survey %>% 
   group_by(PUMA_region, oy_hh_flag) %>% 
   summarize(
-    n = survey_mean(adjusted_income)) %>% 
+    n = survey_median(adjusted_income)) %>% 
   mutate(n_upp = n + (1.96*n_se), 
          n_low = n - (1.96*n_se))
 
