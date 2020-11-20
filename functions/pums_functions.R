@@ -155,18 +155,11 @@ add_other_indicators <- function(pums_data){
     
     commute_var <- 
       cut(commute_var, 
-          breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 1000),
-          labels = c("0-9", 
-                     "10-19", 
-                     "20-29",
-                     "30-39", 
-                     "40-49", 
-                     "50-59", 
-                     "60-69", 
-                     "70-79", 
-                     "80-89",
-                     "90-99", 
-                     "100 +"), 
+          breaks = c(0, 20, 40, 60, 1000),
+          labels = c("0-19", 
+                     "20-39", 
+                     "40-59", 
+                     "60+"), 
           right = FALSE,
           include.lowest = TRUE, 
           ordered_result = TRUE)
@@ -202,12 +195,12 @@ add_other_indicators <- function(pums_data){
     
     head_hh_oy <-
       case_when(
-        oy_flag == "opp_youth" & head_hh_flag == TRUE        ~ "Opportunity Youth - HH", 
-        oy_flag == "opp_youth" & head_hh_flag == FALSE       ~ "Opportunity Youth - Non-HH", 
-        oy_flag == "connected_youth" & head_hh_flag == TRUE  ~ "Connected Youth - HH", 
-        oy_flag == "connected_youth" & head_hh_flag == FALSE ~ "Connected Youth - Non-HH", 
-        oy_flag == "everyone_else"   & head_hh_flag == TRUE  ~ "Everyone Else - HH", 
-        oy_flag == "everyone_else"   & head_hh_flag == FALSE ~ "Everyone Else - Non-HH", 
+        oy_flag == "opp_youth" & head_hh_flag == TRUE        ~ "OY - Householder", 
+        oy_flag == "opp_youth" & head_hh_flag == FALSE       ~ "OY - Non-Household", 
+        oy_flag == "connected_youth" & head_hh_flag == TRUE  ~ "CY - Householder", 
+        oy_flag == "connected_youth" & head_hh_flag == FALSE ~ "CY - Non-Household", 
+        oy_flag == "everyone_else"   & head_hh_flag == TRUE  ~ "EE - Householder", 
+        oy_flag == "everyone_else"   & head_hh_flag == FALSE ~ "EE - Non-Household", 
         TRUE ~ oy_flag
       )
     
@@ -247,6 +240,43 @@ add_other_indicators <- function(pums_data){
     
   }
   
+  # collapsing mode of transportation into a smaller number of categories
+  clean_JWTR_label_variable <- function(JWTR_label){
+    
+    # Collapses JWTR_label, which describes mode of transportation to and from work
+    
+    out <- 
+      forcats::fct_collapse(.f = JWTR_label, 
+                            `Public Transportation` = c("Bus or trolley bus", 
+                                                        "Subway or elevated", 
+                                                        "Railroad", 
+                                                        "Streetcar or trolley car (carro publico in Puerto Rico)"
+                                                        
+                                                        
+                            ))
+    
+    return(out)
+    
+    
+  }
+  
+  clean_HHT_label_variable <- function(HHT_label){
+    
+    out <- 
+      forcats::fct_collapse(
+        .f = HHT_label, 
+        `Other family household` = c("Other family household: Female householder, no spouse present", 
+                                     "Other family household: Male householder, no spouse present"), 
+        `Nonfamily household: living alone` = c("Nonfamily household: Female householder: Living alone", 
+                                                "Nonfamily household: Male householder: Living alone"), 
+        `Nonfamily household: Not living alone` = c("Nonfamily household: Female householder: Not living alone", 
+                                                    "Nonfamily household: Male householder: Not living alone")
+      )
+    
+    return(out)
+    
+  }
+  
   # RUN FUNCTIONS
   pums_data <- 
     pums_data %>% 
@@ -267,7 +297,9 @@ add_other_indicators <- function(pums_data){
            # identifing heads of household within oy group
            oy_hh_flag         = identify_hh_oy(oy_flag, head_hh_flag), 
            # collapsing education attainment to more manageable number of education levels
-           school_attainment  = clean_education_variable(SCHL_label))
+           school_attainment  = clean_education_variable(SCHL_label), 
+           JWTR_alternate = clean_JWTR_label_variable(JWTR_label), 
+           HHT_alternate = clean_HHT_label_variable(HHT_label))
   
   return(pums_data)
   
@@ -358,10 +390,11 @@ categorize_oy_households <- function(pums_data){
           # 2 ^ 3 = 8, but all people are categorized so the house
           # with none does not exist
           case_when(
-            !is.na(opp_youth) & 
-              is.na(connected_youth)                      ~ "Household w/Only OY", 
+            !is.na(opp_youth) 
+              # is.na(connected_youth)                     
+            ~ "Households with OY", 
             !is.na(connected_youth) & 
-              is.na(opp_youth)                            ~ "Household w/Only CY", 
+              is.na(opp_youth)                            ~ "Households with Only CY", 
             
             # # oy_only
             # !is.na(opp_youth) &

@@ -69,6 +69,7 @@ pums_df <-
                 oy_household,
                 oy_household_full,
                 PUMA_region,
+                JWTR_alternate,
 
                 contains('label')),  
       factor))
@@ -327,10 +328,19 @@ analysis_data$question_2$travel_time_to_work <-
   
 analysis_data$question_2$transportation_mode <- 
   pums_survey %>% 
-  filter(!(oy_flag == "connected_youth" & school_label == "Not Attending School")) %>% 
+  filter(!(oy_flag == "connected_youth" & employment_label == "Employed")) %>% 
   create_estimate(pums_survey = ., 
                   oy_flag, 
                   JWTR_label)
+
+analysis_data$question_2$transportation_alternate = 
+  pums_survey %>% 
+  filter(!(oy_flag == "connected_youth" & employment_label == "Employed")) %>% 
+  create_estimate(pums_survey = ., 
+                  oy_flag, 
+                  JWTR_alternate)
+
+
   
   
   
@@ -423,6 +433,18 @@ analysis_data$hht =
     percent = survey_mean(vartype = c('se', 'ci')), 
     n = survey_total(vartype  = c('se','ci'))
   ) 
+
+analysis_data$HHT_alternate = 
+  pums_hh_survey %>% 
+  group_by(oy_household_full, HHT_alternate) %>% 
+  summarize(
+    percent = survey_mean(vartype = c("se", "ci")), 
+    n = survey_total(vartype = c("se", "ci"))
+  )
+
+analysis_data$PARTNERED <- 
+  pums_hh_survey %>% 
+  create_estimate(pums_survey = ., oy_household_full, PARTNER_label)
 
 
 analysis_data$HISPEED_internet <- 

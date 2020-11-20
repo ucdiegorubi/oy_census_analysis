@@ -149,8 +149,9 @@ analysis_data$q1_demographics$total_population_age_bracket %>%
     width = .1
   ) + 
 theme_classic() + 
-  labs(x = "Age bracket of Chicago Population", 
-       y = "Percent") + 
+  labs(x = "Age group", 
+       y = "Percent", 
+       title = "Population of Chicago by age group") + 
   scale_y_continuous(labels = scales::percent) + 
   # erase_axis + 
   scale_x_discrete(labels = function(x) paste0(x, 
@@ -202,7 +203,8 @@ analysis_data$q1_demographics$total_oy_population %>%
     y = 'Population Estimate', 
     caption = 
       str_wrap("*A subset of the population of 16-24 year olds is not captured as either Opportunity Youth or Connected Youth due to missing responses in the data. ", 
-               width = 80)
+               width = 80), 
+    title = "Percentage of youth that are Opportunity Youth"
   ) + 
   scale_y_continuous(labels = scales::percent) 
 ```
@@ -295,7 +297,8 @@ analysis_data$q1_demographics$oy_race_alternate %>%
   labs(x = "", 
        y = figure_helpers$y_percent, 
        fill = "Race / Ethnicity", 
-       caption = "* Percentages less than 5% suppressed for clarity"
+       caption = "* Percentages less than 5% suppressed for clarity", 
+       title = "Race or Ethnicity of Youth group"
        ) + 
   scale_y_continuous(labels = scales::percent) + 
   theme_classic() + 
@@ -318,13 +321,14 @@ analysis_data$q1_demographics$oy_race_alternate %>%
 # Male
 
 analysis_data$q1_demographics$oy_sex %>% 
-  filter(SEX_label != "Female") %>% 
+  filter(SEX_label != "Female") %>%
   ggplot(aes(x = oy_flag, 
              y = percent)) + 
   geom_col(width = .5, 
            # color = 'black',
            aes(fill = oy_flag), 
-           color = 'black'
+           color = 'black', 
+           # position = 'dodge'
   ) + 
   geom_errorbar( aes(ymax = percent_upp ,
                      ymin = !!error_bar_low), 
@@ -337,14 +341,15 @@ analysis_data$q1_demographics$oy_sex %>%
     ) + 
   labs(x = "Percentage of individuals between 16-24 who identify as male", 
        y = figure_helpers$y_percent, 
-       fill = "Sex / Gender") + 
+       fill = "Gender identity", 
+       title = "Gender identity of youth group") + 
   scale_y_continuous(labels = scales::percent) + 
   theme_classic() + 
   theme(
     legend.position = 'bottom'
   ) + 
   
-  scale_fill_manual(values = c(color_contrast)) + 
+  scale_fill_manual(values = c(color_contrast)) +
   guides(fill = FALSE)
 ```
 
@@ -373,7 +378,8 @@ analysis_data$q1_demographics$oy_disability %>%
   ) + 
   labs(x =  "Percentage of individuals between 16-24 that report having a disability", 
        y = figure_helpers$y_percent, 
-       color = "Disability Status") + 
+       color = "Disability Status", 
+       title = "Disability status of youth groups") + 
   scale_y_continuous(labels = scales::percent) + 
   theme_classic() + 
   theme(
@@ -414,9 +420,10 @@ analysis_data$q1_demographics$oy_age_bracket %>%
     fill = 'white', 
     size = 2.5
     ) + 
-  labs(x = "Percentage of individuals between 20-24", 
+  labs(x = "Youth Group", 
        y = figure_helpers$y_percent, 
-       fill = "Age Bracket") + 
+       fill = "Age Bracket", 
+       title = "Percentage of individuals between 20-24") + 
   scale_y_continuous(labels = scales::percent) + 
   theme_classic() + 
   theme(
@@ -431,26 +438,34 @@ analysis_data$q1_demographics$oy_age_bracket %>%
 
 ## Half of Opportunity Youth have graduated from high school
 
-```{r}
+```{r, fig.height = 5, fig.width = 7}
+
+
 analysis_data$q1_demographics$oy_edu_attainment %>% 
   filter(oy_flag != "Everyone Else") %>% 
   mutate(school_attainment = figure_helpers$format_education_variable(school_attainment)) %>% 
   ggplot(aes(x = oy_flag, y = percent)) + 
-  geom_col(aes(fill = school_attainment)) + 
+  geom_col(aes(fill = school_attainment), 
+           position = 'dodge') + 
   theme_classic() + 
   labs(
     fill = "Educational Attainment", 
     y = "Percent", 
-    caption = "Cells representing less than 5% suppressed for clarity"
+    caption = "Cells representing less than 5% suppressed for clarity", 
+    title = 'Educational attainment by youth group'
   ) + 
-  erase_axis + 
-  theme(axis.title.x = element_blank()) + 
+  
+  theme(axis.title.x = element_blank(), 
+        legend.position = 'bottom') + 
   geom_text(aes(label = if_else(percent > .05, 
                                 scales::percent(percent, accuracy = .1), 
                                 ""), 
                 group = school_attainment), 
-            position = position_stack(vjust = .5)) + 
-  scale_fill_manual(values = c(ggsci::pal_uchicago('default')(9), "salmon1"))
+            position = position_dodge(width = .9)) + 
+  scale_fill_manual(values = c(ggsci::pal_uchicago('default')(9), "salmon1"))  + 
+  scale_y_continuous(labels = scales::percent) +
+  guides(fill = guide_legend(title = "Primary Plan",
+                             keyheight = unit(3, units = "mm")))
 
 
 
@@ -506,7 +521,8 @@ analysis_data$q1_demographics$oy_race_gender_alternate %>%
   labs(
     x = "Race", 
     y = "", 
-    fill = "Sex"
+    fill = "Sex", 
+    title = "OY by race and gender"
   ) + 
   scale_x_discrete(labels = ss) + 
   scale_fill_manual(values = 
@@ -540,7 +556,7 @@ analysis_data$oy_race_gender_alternate %>%
 
 
 
-## Opportunity Youth are concentrated on South Side and West Side Chicago
+## Opportunity Youth are concentrated on Chicago's South and West Sides
 
 ```{r, eval = T}
 chicago_map <- 
@@ -567,7 +583,8 @@ analysis_data$q1_demographics$geo_puma_pop_percent %>%
                       high = "#D5802B",
                       na.value = "white") + 
   labs(fill = 
-         str_wrap("Percentage of Youth that are Opportunity Youth", 30)) + 
+         str_wrap("Percentage of Youth that are Opportunity Youth", 30), 
+       title = "Distribution of Opportunity Youth by PUMA") + 
   scale_y_continuous(labels = scales::percent)
   
 
@@ -612,7 +629,8 @@ puma_reference_map <-
     legend.position = 'none'
   ) + 
   labs(
-    fill = "Chicago Region"
+    fill = "Chicago Region", 
+    title = "PUMA by Chicago region"
   )
 
 
@@ -620,9 +638,12 @@ puma_reference_map <-
 ```
 
 
-## OY by PUMA
 
-```{r}
+
+```{r, eval = F}
+
+## Most Opportunity Youth are concentrated on 
+
 analysis_data$q1_demographics$puma_oy_population %<>%
   left_join(
     analysis_data$employed_by_puma %>% ungroup() %>% select(PUMA_region, PUMA) %>% mutate_all(as.character) %>% distinct(), 
@@ -648,7 +669,8 @@ analysis_data$q1_demographics$puma_oy_population %>%
   ) + 
   labs(y = "Percent", 
        x = "PUMA", 
-       fill = "Chicago Region")
+       fill = "Chicago Region", 
+       title = "Percentage of Opportunity Youth by PUMA")
 ```
 
 
@@ -685,7 +707,8 @@ plot_chart <-
   scale_y_continuous(labels = scales::percent) + 
   labs(y = "Percent", 
        x = "PUMA", 
-       fill = "Chicago Region") + 
+       fill = "Chicago Region", 
+       title = "Connected Youth employment by PUMA") + 
   theme(
     legend.position = 'bottom'
   ) +
@@ -693,7 +716,7 @@ plot_chart <-
   coord_flip()
 
 
-cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/4, 3/4), rel_widths = c(2/5,3/5))
+cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/5, 4/4), rel_widths = c(2/5,3/5))
   
   
 
@@ -720,7 +743,8 @@ plot_chart <-
   scale_y_continuous(labels = scales::percent, limits = c(0,1)) + 
   labs(y = "Percent", 
        x = "PUMA", 
-       fill = "Chicago Region") + 
+       fill = "Chicago Region", 
+       title = "Connected Youth school enrollment by PUMA") + 
   theme(
     legend.position = 'bottom'
   ) +
