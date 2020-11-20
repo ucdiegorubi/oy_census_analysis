@@ -265,9 +265,9 @@ basic_plot_dodge <- function(data, fill_label = NULL, erase = FALSE){
 
 ### How are Opportunity Youth defined?
 
-- _Opportunity Youth(OY):_ Individuals that are 16 to 24 years old who are simultaneously unemployed/ not in the labor force and not enrolled in school (disconnection)
-- _Connected Youth(CY):_ Individuals that are 16 to 24 years old who are either employed, enrolled in school, or both.
-- _Everyone Else(EE):_ Individuals outside of this age category, regardless of employment or school enrollment status
+- _Opportunity Youth (OY):_ Individuals that are 16 to 24 years old who are simultaneously unemployed/ not in the labor force and not enrolled in school (disconnection)
+- _Connected Youth (CY):_ Individuals that are 16 to 24 years old who are either employed, enrolled in school, or both.
+- _Everyone Else (EE):_ Individuals outside of this age category, regardless of employment or school enrollment status
 
 
 
@@ -471,7 +471,7 @@ analysis_data$num_people_lived_with %>%
 
 
 
-### Opportunity Youth are half as likely as Connected Youth to be the reference person
+### Opportunity Youth are half as likely as Connected Youth to householders
 
 
 ```{r, fig.width = 8}
@@ -682,8 +682,7 @@ ipums_data$at_least_one_child %>%
   scale_fill_manual(values = color_contrast_alt) + 
   labs(
     caption = paste0(figure_helpers$citations['IPUMS'],
-                     figure_helpers$fig_help$newline,
-                     figure_helpers$suppress),
+                     figure_helpers$fig_help$newline),
     y = "Percent"
   ) + 
   geom_label(
@@ -737,8 +736,7 @@ ipums_data$percent_children %>%
   #           position = position_dodge(width = .9)) + 
   labs(
     caption = paste0(figure_helpers$citations['IPUMS'], 
-                     figure_helpers$fig_help$newline, 
-                     figure_helpers$suppress), 
+                     figure_helpers$fig_help$newline), 
     fill = "Number of Children", 
     y = "Percent", 
     title = "Number of Children"
@@ -765,7 +763,7 @@ ipums_data$percent_children %>%
 
 
 
-### The median income of Households with Only OY is less than half that of other households 
+### The median income of 'Households with Only OY' is less than half that of other households 
 
 ```{r, fig.height = 6}
   
@@ -804,19 +802,19 @@ analysis_data$household_type_median_income %>%
 ```
 
 
-### Median Income YY Reference Person by PUMA
+### Median Income by Reference Person by Chicago region
 
 ```{r}
 
 analysis_data$median_income_hh_by_puma_region %>% 
-  filter(str_detect(oy_hh_flag, "(Connected)")) %>% 
+  filter(str_detect(oy_hh_flag, "(CY)")) %>%
   ggplot(aes(x = PUMA_region, y = n)) + 
   geom_col(aes(fill = oy_hh_flag), 
            position = 'dodge', 
            color = 'black') + 
   geom_errorbar(aes(ymin = n_low, ymax = n_upp, group = oy_hh_flag), 
                 width = .2, 
-                linetype = 'dashed', 
+                
                 position = position_dodge(width = .9)) +
   geom_label(aes(label = scales::dollar(n), 
                 group = oy_hh_flag), 
@@ -830,7 +828,10 @@ analysis_data$median_income_hh_by_puma_region %>%
   labs(y = "Median Income", 
        x = "PUMA Region", 
        fill = "Head of Household Status", 
-       title = "Median income of reference person for Connected Youth by Chicago region") + 
+       title = "Median income for Connected Youth householder by Chicago region", 
+       caption = paste0(figure_helpers$citations['PUMS'], 
+                        figure_helpers$fig_help$newline, 
+                        figure_helpers$ci_median)) + 
   theme(
     strip.background = element_blank(), 
     strip.text = element_text(face = 'bold')
@@ -888,11 +889,11 @@ analysis_data$q2_household$average_income %>%
 # Person level
 
 analysis_data$question_2$transportation_alternate %>% 
-  filter(oy_flag == "Connected Youth") %>%
+  # filter(oy_flag == "Connected Youth") %>%
   mutate(JWTR_alternate = as.character(JWTR_alternate) %>% str_remove( "\\(.*\\)"),
          JWTR_alternate = fct_reorder(JWTR_alternate, n)) %>%
   basic_plot_dodge(erase = F) + 
-  labs(fill = "Means of transportation to work", 
+  labs(fill = "Transportation Mode", 
        caption = paste0(figure_helpers$citations['PUMS'], 
                         figure_helpers$fig_help$newline, 
                         figure_helpers$suppress),
@@ -916,19 +917,20 @@ analysis_data$question_2$transportation_alternate %>%
 
 ```
 
-### Most Connected Youth are commute twenty minutes or less to their employer
+### Many Connected Youth are between 20 and 40 minutes from their employer
 
 ```{r}
 
 # mode of transportation
 # person level 
-analysis_data$q2_household$commute_bracket %>% 
-  filter(oy_flag != "Opportunity Youth") %>% 
-  mutate(commute_bracket = forcats::fct_relevel(commute_bracket, "100 +", after = 11)) %>% 
+analysis_data$question_2$commute_bracket %>% 
+  # filter(oy_flag != "Opportunity Youth") %>% 
+  # mutate(commute_bracket = forcats::fct_relevel(commute_bracket, "100 +", after = 11)) %>% 
   basic_plot_dodge(erase = F) +
   labs(fill = "Commute Time (minutes)", 
        caption = figure_helpers$citations['PUMS'], 
-       y = "Percent") + 
+       y = "Percent", 
+       title = "Commute time for employed Connected Youth") + 
   wrap_x_labels + 
   geom_errorbar(aes(ymin = !!error_bar_setting, ymax = percent_upp),
                 position = position_dodge(width = .9),
@@ -969,7 +971,10 @@ analysis_data$HISPEED_internet %>%
     y = "Percent", 
     fill = "Broadband Access", 
     title = "Broadband access by household type"
-  )
+  ) + 
+  guides(fill = guide_legend(title = "Broadband Access",
+                             keyheight = unit(3, units = "mm"))) + 
+  theme(legend.position = 'bottom')
 
 ```
 

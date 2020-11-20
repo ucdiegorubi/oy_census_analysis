@@ -320,22 +320,29 @@ analysis_data$oy_personal_median_income <-
 analysis_data$question_2$travel_time_to_work <- 
   # we want to omit students connected youth that are attending school
   pums_survey %>% 
-  filter(!(oy_flag == "connected_youth" & school_label == "Not Attending School")) %>% 
+  filter(oy_flag == "connected_youth" & employment_label == "Employed") %>% 
   numeric_estimate(pums_survey = ., 
                    count_col = !!(rlang::sym("JWMNP")), 
                    oy_flag)
 
+analysis_data$question_2$commute_bracket <- 
+  pums_survey %>% 
+  filter(oy_flag == "connected_youth" & employment_label == "Employed") %>% 
+  create_estimate(pums_survey = ., 
+                  oy_flag, 
+                  commute_bracket)
+
   
 analysis_data$question_2$transportation_mode <- 
   pums_survey %>% 
-  filter(!(oy_flag == "connected_youth" & employment_label == "Employed")) %>% 
+  filter(oy_flag == "connected_youth" & employment_label == "Employed") %>% 
   create_estimate(pums_survey = ., 
                   oy_flag, 
                   JWTR_label)
 
 analysis_data$question_2$transportation_alternate = 
   pums_survey %>% 
-  filter(!(oy_flag == "connected_youth" & employment_label == "Employed")) %>% 
+  filter(oy_flag == "connected_youth" & employment_label == "Employed") %>% 
   create_estimate(pums_survey = ., 
                   oy_flag, 
                   JWTR_alternate)

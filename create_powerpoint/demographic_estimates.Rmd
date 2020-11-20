@@ -12,7 +12,7 @@ output:
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = F, 
                       message = F, 
-                      fig.height = 4, 
+                      fig.height = 6, 
                       fig.width = 8)
 ```
 
@@ -204,7 +204,7 @@ analysis_data$q1_demographics$total_oy_population %>%
     caption = 
       str_wrap("*A subset of the population of 16-24 year olds is not captured as either Opportunity Youth or Connected Youth due to missing responses in the data. ", 
                width = 80), 
-    title = "Percentage of youth that are Opportunity Youth"
+    title = "Percentage of youth identified as Opportunity Youth"
   ) + 
   scale_y_continuous(labels = scales::percent) 
 ```
@@ -438,7 +438,7 @@ analysis_data$q1_demographics$oy_age_bracket %>%
 
 ## Half of Opportunity Youth have graduated from high school
 
-```{r, fig.height = 5, fig.width = 7}
+```{r, fig.height = 6, fig.width = 8}
 
 
 analysis_data$q1_demographics$oy_edu_attainment %>% 
@@ -451,12 +451,14 @@ analysis_data$q1_demographics$oy_edu_attainment %>%
   labs(
     fill = "Educational Attainment", 
     y = "Percent", 
-    caption = "Cells representing less than 5% suppressed for clarity", 
+    caption = paste0(figure_helpers$citations['PUMS'], 
+                     figure_helpers$fig_help$newline, 
+                     figure_helpers$suppress), 
     title = 'Educational attainment by youth group'
   ) + 
   
   theme(axis.title.x = element_blank(), 
-        legend.position = 'bottom') + 
+        legend.position = 'right') + 
   geom_text(aes(label = if_else(percent > .05, 
                                 scales::percent(percent, accuracy = .1), 
                                 ""), 
@@ -464,7 +466,7 @@ analysis_data$q1_demographics$oy_edu_attainment %>%
             position = position_dodge(width = .9)) + 
   scale_fill_manual(values = c(ggsci::pal_uchicago('default')(9), "salmon1"))  + 
   scale_y_continuous(labels = scales::percent) +
-  guides(fill = guide_legend(title = "Primary Plan",
+  guides(fill = guide_legend(title = "Educational Attainment",
                              keyheight = unit(3, units = "mm")))
 
 
@@ -522,7 +524,7 @@ analysis_data$q1_demographics$oy_race_gender_alternate %>%
     x = "Race", 
     y = "", 
     fill = "Sex", 
-    title = "OY by race and gender"
+    title = "Opportunity Youth by race and gender"
   ) + 
   scale_x_discrete(labels = ss) + 
   scale_fill_manual(values = 
@@ -676,7 +678,8 @@ analysis_data$q1_demographics$puma_oy_population %>%
 
 
 
-## Southside connected youth are less likely to be employed
+## Among all connected youth, those on the South Side are less likely to be employed
+
 
 ```{r, fig.height = 5, fig.width = 10}
 
@@ -723,7 +726,7 @@ cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/5
 
 ```
 
-## Westside connected youth are less likely to be enrolled in school 
+## Among all Connected Youth, those on the Wesetside are less likely to be enrolled in school 
 
 ```{r, fig.height = 5, fig.width = 10}
 
