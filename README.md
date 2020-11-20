@@ -151,3 +151,14 @@ Most of these variables are straight forward. _AGEP_ is numeric and we are able 
 *10/20/2020*:
 - writing documentation for project. I really should have used this project log more often.
 - As of this writing this analysis would not work for any other state. We subset for Chicago PUMAs, and this step would fail in any other state as they do not contain PUMAS named "Chicago City". This needs to be made a parameter option.
+
+*11/20/2020*:
+
+- Delivered final presentation to Thrive data team. Presentation consisted of household structure questions and demographic estimates. 
+
+To-do:
+- refactor how we calculate estimates. The code is kind of sloppy and includes a lot of unnecessary clutter.
+- test workflow with 2019 PUMS file
+    - would need 2019 IPUMS file (won't be out for a while as of this writing)
+- maybe refactor to use the Drake package for automation? Currently relies on GNU Make which is a Linux program not available on all systems.
+- median confidence interval estimates (srvyr package not working , may need survey directly) are inaccurate. 1.96*SE not accurate for median confidence intervals as they are not necessarily symmetric. 
