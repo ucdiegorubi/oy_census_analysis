@@ -38,16 +38,14 @@ figure_helpers <-
         factor(
           edu_attainment, 
           levels = c("N/A (less than 3 years old)",
-                     "No schooling completed", 
+                     # "No schooling completed", 
                      "Less than High School Diploma", 
-                     "Regular high school diploma",
-                     "GED or alternative credential", 
+                     "High school diploma or GED/alternative credential", 
                      "Some College", 
                      "Associate's degree", 
                      "Bachelor's degree",
-                     "Master's degree", 
-                     "Professional degree beyond a bachelor's degree", 
-                     "Doctorate degree"), 
+                     "Graduate or Professional Degree"
+                     ), 
           ordered = TRUE)
       
       return(edu_attainment)

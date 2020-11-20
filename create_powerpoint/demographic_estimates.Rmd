@@ -298,7 +298,7 @@ analysis_data$q1_demographics$oy_race_alternate %>%
        y = figure_helpers$y_percent, 
        fill = "Race / Ethnicity", 
        caption = "* Percentages less than 5% suppressed for clarity", 
-       title = "Race or Ethnicity of Youth group"
+       title = "Race or Ethnicity of Opportunity Youth"
        ) + 
   scale_y_continuous(labels = scales::percent) + 
   theme_classic() + 
@@ -333,16 +333,17 @@ analysis_data$q1_demographics$oy_sex %>%
   geom_errorbar( aes(ymax = percent_upp ,
                      ymin = !!error_bar_low), 
                  width = .1) + 
-  geom_text(
+  geom_label(
     aes(
       label = scales::percent(percent, accuracy = .1), 
       group = SEX_label), 
-      position = position_stack(vjust = .5)
+    size = 2.5
+      # position = position_stack(vjust = .5)
     ) + 
   labs(x = "Percentage of individuals between 16-24 who identify as male", 
        y = figure_helpers$y_percent, 
        fill = "Gender identity", 
-       title = "Gender identity of youth group") + 
+       title = "Gender identity of Opportunity Youth") + 
   scale_y_continuous(labels = scales::percent) + 
   theme_classic() + 
   theme(
@@ -379,7 +380,7 @@ analysis_data$q1_demographics$oy_disability %>%
   labs(x =  "Percentage of individuals between 16-24 that report having a disability", 
        y = figure_helpers$y_percent, 
        color = "Disability Status", 
-       title = "Disability status of youth groups") + 
+       title = "Disability status of Opportunity Youth") + 
   scale_y_continuous(labels = scales::percent) + 
   theme_classic() + 
   theme(
@@ -420,7 +421,7 @@ analysis_data$q1_demographics$oy_age_bracket %>%
     fill = 'white', 
     size = 2.5
     ) + 
-  labs(x = "Youth Group", 
+  labs(x = "Opportunity Youth", 
        y = figure_helpers$y_percent, 
        fill = "Age Bracket", 
        title = "Percentage of individuals between 20-24") + 
@@ -436,14 +437,14 @@ analysis_data$q1_demographics$oy_age_bracket %>%
 
 ```
 
-## Half of Opportunity Youth have graduated from high school
+## Nearly 75% of Opportunity Youth have graduated from high school
 
-```{r, fig.height = 6, fig.width = 8}
+```{r, fig.height = 6, fig.width = 9}
 
 
 analysis_data$q1_demographics$oy_edu_attainment %>% 
   filter(oy_flag != "Everyone Else") %>% 
-  mutate(school_attainment = figure_helpers$format_education_variable(school_attainment)) %>% 
+  mutate(school_attainment = figure_helpers$format_education_variable(school_attainment)) %>%
   ggplot(aes(x = oy_flag, y = percent)) + 
   geom_col(aes(fill = school_attainment), 
            position = 'dodge') + 
@@ -454,20 +455,31 @@ analysis_data$q1_demographics$oy_edu_attainment %>%
     caption = paste0(figure_helpers$citations['PUMS'], 
                      figure_helpers$fig_help$newline, 
                      figure_helpers$suppress), 
-    title = 'Educational attainment by youth group'
+    title = 'Educational attainment of Opportunity Youth'
   ) + 
   
   theme(axis.title.x = element_blank(), 
         legend.position = 'right') + 
-  geom_text(aes(label = if_else(percent > .05, 
-                                scales::percent(percent, accuracy = .1), 
-                                ""), 
-                group = school_attainment), 
-            position = position_dodge(width = .9)) + 
-  scale_fill_manual(values = c(ggsci::pal_uchicago('default')(9), "salmon1"))  + 
+
+  
+  geom_errorbar(aes(ymin = !!error_bar_low, ymax = percent_upp, group = school_attainment), 
+                position = position_dodge(width = .9), 
+                width = .2) +
+  
+  geom_label(aes(label = if_else(percent > .05,
+                                scales::percent(percent, accuracy = .1),
+                                NULL),
+                group = school_attainment),
+            position = position_dodge(width = .9), 
+            size = 2.5) +
+ 
+  
+  # ggsci::scale_fill_uchicago() + 
+  scale_fill_manual(labels = function(x) str_wrap(x, 20), 
+                    values = ggsci::pal_uchicago('default')(6)) +
   scale_y_continuous(labels = scales::percent) +
   guides(fill = guide_legend(title = "Educational Attainment",
-                             keyheight = unit(3, units = "mm")))
+                             keyheight = unit(5, units = "mm"),keywidth = unit(6, units = 'mm'))) 
 
 
 
@@ -478,9 +490,9 @@ analysis_data$q1_demographics$oy_edu_attainment %>%
 
 
 
-## Most Opportunity Youth across nearly all races identify as male
+## Across nearly all races, most Opportunity Youth identify as male
 
-```{r}
+```{r, fig.width = 13}
 ss <- 
   analysis_data$q1_demographics$oy_race_alternate %>% 
   group_by(race_alternate) %>% 
@@ -503,15 +515,31 @@ analysis_data$q1_demographics$oy_race_gender_alternate %>%
   geom_col(aes(fill = SEX_label), 
            color = 'black') + 
   facet_wrap(~oy_flag) + 
-  coord_flip() +
+  # coord_flip() +
   theme_classic() + 
-  geom_text(aes(label = paste0(scales::percent(percent, accuracy = .1),
-                               figure_helpers$fig_help$newline, 
-                               figure_helpers$fig_help$N, 
-                               n %>% format(big.mark = ',')),
-                group = SEX_label), 
-            size = 3, 
-            position = position_stack(vjust= .5)) + 
+  geom_errorbar(aes(ymin = percent_low, ymax = percent_upp), 
+                width = .3) + 
+  geom_label(aes(
+    # label = paste0(scales::percent(percent, accuracy = .1),
+    #                figure_helpers$fig_help$newline, 
+    #                figure_helpers$fig_help$N, 
+    #                n %>% format(big.mark = ',')),
+    label = scales::percent(percent, suffix = "", accuracy = .1),
+    group = SEX_label), 
+    size = 2.5
+    # position = position_stack(vjust= .5)
+  ) + 
+  geom_text(aes(
+    # label = paste0(scales::percent(percent, accuracy = .1),
+    #                figure_helpers$fig_help$newline, 
+    #                figure_helpers$fig_help$N, 
+    #                n %>% format(big.mark = ',')),
+    label = paste0(figure_helpers$fig_help$N, format(n, big.mark = ',')),
+    group = SEX_label, 
+    y = .05), 
+    size = 2.5, 
+    position = position_stack(vjust= .5)
+  ) + 
   scale_y_continuous(labels = scales::percent) + 
   theme(
     strip.background = element_blank(), 
@@ -524,7 +552,7 @@ analysis_data$q1_demographics$oy_race_gender_alternate %>%
     x = "Race", 
     y = "", 
     fill = "Sex", 
-    title = "Opportunity Youth by race and gender"
+    title = "Opportunity Youth by race and gender (identify as male)"
   ) + 
   scale_x_discrete(labels = ss) + 
   scale_fill_manual(values = 
@@ -534,9 +562,8 @@ analysis_data$q1_demographics$oy_race_gender_alternate %>%
                       )) + 
   guides(
     fill = FALSE
-    ) + 
-  geom_errorbar(aes(ymin = percent_low, ymax = percent_upp), 
-                width = .3)
+    ) 
+
 ```
 
 
@@ -586,7 +613,7 @@ analysis_data$q1_demographics$geo_puma_pop_percent %>%
                       na.value = "white") + 
   labs(fill = 
          str_wrap("Percentage of Youth that are Opportunity Youth", 30), 
-       title = "Distribution of Opportunity Youth by PUMA") + 
+       title = "Percent Opportunity Youth by PUMA") + 
   scale_y_continuous(labels = scales::percent)
   
 

@@ -196,11 +196,11 @@ add_other_indicators <- function(pums_data){
     head_hh_oy <-
       case_when(
         oy_flag == "opp_youth" & head_hh_flag == TRUE        ~ "OY - Householder", 
-        oy_flag == "opp_youth" & head_hh_flag == FALSE       ~ "OY - Non-Household", 
+        oy_flag == "opp_youth" & head_hh_flag == FALSE       ~ "OY - Non-Householder", 
         oy_flag == "connected_youth" & head_hh_flag == TRUE  ~ "CY - Householder", 
-        oy_flag == "connected_youth" & head_hh_flag == FALSE ~ "CY - Non-Household", 
+        oy_flag == "connected_youth" & head_hh_flag == FALSE ~ "CY - Non-Householder", 
         oy_flag == "everyone_else"   & head_hh_flag == TRUE  ~ "EE - Householder", 
-        oy_flag == "everyone_else"   & head_hh_flag == FALSE ~ "EE - Non-Household", 
+        oy_flag == "everyone_else"   & head_hh_flag == FALSE ~ "EE - Non-Householder", 
         TRUE ~ oy_flag
       )
     
@@ -225,13 +225,23 @@ add_other_indicators <- function(pums_data){
       c(paste0("Grade ", 1:11), 
         "12th grade - no diploma", 
         "Nursery school, preschool", 
+        "No schooling completed",
         'Kindergarten')
+    
+    graduate_degree = c("Doctorate degree",
+                        "Master's degree", 
+                        "Professional degree beyond a bachelor's degree")
+    
+    ged_hs_diploma = c("GED or alternative credential", 
+                       "Regular high school diploma")
     
     
     SCHL <- 
       case_when(
         SCHL %in% some_college   ~ "Some College", 
         SCHL %in% no_hs_diploma  ~ "Less than High School Diploma",
+        SCHL %in% ged_hs_diploma ~ "High school diploma or GED/alternative credential",
+        SCHL %in% graduate_degree ~ "Graduate or Professional Degree",
         TRUE                   ~ SCHL
       )
     

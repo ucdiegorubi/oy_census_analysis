@@ -429,8 +429,7 @@ analysis_data$household_type %>%
   scale_y_continuous(labels = scales::percent, breaks = c(0, .2,   .4,  .6,  .8)) + 
   labs(y = "Percent", 
        caption = paste0(figure_helpers$citations['PUMS'], 
-                        figure_helpers$fig_help$newline, 
-                        figure_helpers$suppress), 
+                        figure_helpers$fig_help$newline), 
        x = "Household Type", 
        title = "Household Types in Chicago") + 
   scale_x_discrete(labels = ss) + 
