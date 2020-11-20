@@ -251,15 +251,15 @@ basic_plot_dodge <- function(data, fill_label = NULL, erase = FALSE){
   
 ### Research Questions (cont.)
 
-  - How many youth are married?
-  - How many youth are partnered?
-  - How many households are foodstamp recipients?
-  - What type of households do
-  - What percentage of each household has broadband access?
-  - What percentage of each household has computer access?
+  - How many Opportunity Youth are married?
+  - How many Opportunity Youth are partnered?
+  - How many households are food-stamp recipients?
   - Have Opportunity Youth moved within the last year?
   - What are Connected Youths' primary form of transportation?
   - What are Connected Youths' average commute time?
+  - What percentage of each household has broadband access?
+  - What percentage of each household has computer access?
+
 
 # Refresher
 
@@ -440,7 +440,7 @@ analysis_data$household_type %>%
 
 
 
-### Both Connected Youth and Opportunity Youth live in larger households 
+### Opportunity Youth live in the largest households
 
 ```{r}
 
@@ -470,7 +470,7 @@ analysis_data$num_people_lived_with %>%
 
 
 
-### Opportunity Youth are half as likely as Connected Youth to householders
+### Opportunity Youth are nearly half as likely as Connected Youth to be householders
 
 
 ```{r, fig.width = 8}
@@ -596,7 +596,7 @@ analysis_data$q2_household$migration %>%
 ```
 
 
-### Households w/OY are almost twice as likely to receive foodstamps than all other households
+### Households w/OY are about twice as likely to receive food stamps as all other households
 
 ```{r, eval = T}
 # household level
@@ -657,7 +657,7 @@ analysis_data$hht %>%
 
 
 
-### Opportunity Youth are three times as likely to have at least one child
+### Opportunity Youth are nearly three times as likely to have at least one child
 
 ```{r, fig.height = 6}
 # children are now individual level so I can say, does a given individual have at least one child?
@@ -762,7 +762,7 @@ ipums_data$percent_children %>%
 
 
 
-### The median income of 'Households with Only OY' is less than half that of other households 
+### The median income of 'Households with Only OY' is about 2/3rds that of other households 
 
 ```{r, fig.height = 6}
   
@@ -801,7 +801,7 @@ analysis_data$household_type_median_income %>%
 ```
 
 
-### Median Income by Reference Person by Chicago region
+### CY Householders on the South Side have the lowest median incomes
 
 ```{r}
 
@@ -939,9 +939,8 @@ analysis_data$question_2$commute_bracket %>%
              color = 'black', 
              fill = 'white', 
              position = position_dodge(width = .9), 
-             size = 2.5) +
-
-  scale_fill_viridis(discrete = TRUE)
+             size = 2.5) + 
+  scale_fill_brewer(palette = 7, direction = -1)
 
 
 
@@ -978,7 +977,7 @@ analysis_data$HISPEED_internet %>%
 ```
 
 
-### More than 1 in 3 households with OY do hot have access to a laptop
+### Nearly 1 in 3 households with OY do hot have access to a laptop
 
 ```{r}
 analysis_data$LAPTOP %>%

@@ -348,8 +348,26 @@ analysis_data$question_2$transportation_alternate =
                   JWTR_alternate)
 
 
-  
-  
+analysis_data$puma_youth_population <- 
+  pums_survey %>% 
+  filter(oy_flag != "everyone_else") %>% 
+  group_by(PUMA) %>% 
+  survey_count(vartype = c("se", 'ci'))
+
+analysis_data$puma_region_youth_population <- 
+  pums_survey %>% 
+  filter(oy_flag != "everyone_else") %>% 
+  group_by(PUMA_region) %>% 
+  survey_count(vartype = c("se", "ci"))
+
+
+analysis_data$geo_puma_youth_population <- 
+  analysis_data$q1_demographics$geo_puma_pop %>% 
+  tigris::geo_join(spatial_data = ., 
+                   data_frame = analysis_data$puma_youth_population %>% select(PUMA, n), 
+                   by_sp = "PUMACE10", 
+                   by_df = "PUMA")
+
   
 
 

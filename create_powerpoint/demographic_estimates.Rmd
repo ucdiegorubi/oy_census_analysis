@@ -592,7 +592,8 @@ chicago_map <-
   MapChi::CAs %>% 
   sf::st_as_sf()
 
-analysis_data$q1_demographics$geo_puma_pop_percent %>% 
+p1 <- 
+  analysis_data$q1_demographics$geo_puma_pop_percent %>% 
   ggplot() + 
   geom_sf(aes(fill = opp_youth * 100), 
           colour = NA) + 
@@ -612,14 +613,43 @@ analysis_data$q1_demographics$geo_puma_pop_percent %>%
                       high = "#D5802B",
                       na.value = "white") + 
   labs(fill = 
-         str_wrap("Percentage of Youth that are Opportunity Youth", 30), 
-       title = "Percent Opportunity Youth by PUMA") + 
+         str_wrap("OY Percentage", 30), 
+       title = "Opportunity Youth percentage by PUMA") + 
   scale_y_continuous(labels = scales::percent)
   
 
 
 
 ```
+
+```{r, fig.width = 10}
+p2 <- 
+  analysis_data$geo_puma_youth_population %>% 
+  ggplot() + 
+  geom_sf(aes(fill = n), 
+          colour = NA) + 
+  geom_sf(data = chicago_map,
+          fill = NA,
+          color = alpha('grey', .4),
+          inherit.aes = FALSE) +
+  
+  geom_sf_text(aes(label = format(n, big.mark = ',')), 
+               size = 2.6, 
+               color = 'black') + 
+  
+  theme_void() +
+  scale_fill_gradient(low = "#fff7bc",
+                      high = "#D5802B",
+                      na.value = "white") + 
+  labs(fill = 
+         str_wrap("Youth Population", 30), 
+       title = "Number of CY & OY by PUMA") + 
+  scale_y_continuous(labels = scales::percent)
+
+cowplot::plot_grid(p1, p2)
+
+```
+
 
 
 ```{r, include = F}
