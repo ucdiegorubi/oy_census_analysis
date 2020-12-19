@@ -540,29 +540,36 @@ analysis_data$employed_by_puma <-
     percent = survey_mean(vartype = c("se", 'ci'))
   ) 
 
-test = analysis_data$employed_by_puma
+analysis_data$employed_by_puma_region <- 
+  pums_survey %>% 
+  filter(employment_label %in% c("Employed", "Unemployed")) %>% 
+  group_by(PUMA_region, oy_flag, employment_label) %>% 
+  summarize(
+    n = survey_total(vartype = c("se", "ci")), 
+    percent = survey_mean(vartype = c("se", "ci"))
+  )
+
+
 
 # SCHOOL ATTENDANCE BY PUMA -----------------------------------------------
 analysis_data$school_youth_attendance_by_puma <- 
   pums_survey %>% 
   # filter(oy_flag != "opp_youth") %>% 
-  group_by(PUMA_region, PUMA, oy_flag, school_label) %>% 
+  group_by(PUMA_region, PUMA,  oy_flag, school_label) %>% 
   summarize(
     n = survey_total(vartype = c("se", "ci")),
     percent = survey_mean(vartype = c("se", "ci"))
   )
 
-analysis_data$school_youth_attendance_labels <- 
-  analysis_data$school_youth_attendance_by_puma %>% 
-  filter(oy_flag == "connected_youth") %>% 
-  group_by(PUMA) %>% 
+analysis_data$school_youth_attendance_by_puma_region <- 
+  pums_survey %>% 
+  # filter(oy_flag != "opp_youth") %>% 
+  group_by(PUMA_region,oy_flag, school_label) %>% 
   summarize(
-    n = sum(n)
-  ) %>% 
-  mutate(label = paste(PUMA, "\n","N =", format(n, big.mark = ','))) %>% 
-  select(PUMA, label) %>% 
-  spread(PUMA, label) %>% 
-  unlist()
+    n = survey_total(vartype = c("se", "ci")),
+    percent = survey_mean(vartype = c("se", "ci"))
+  )
+
 
 
 # MEDIAN INCOME BY PUMA ---------------------------------------------------

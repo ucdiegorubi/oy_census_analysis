@@ -752,11 +752,11 @@ analysis_data$q1_demographics$puma_oy_population %>%
 #   theme_classic() + 
 #   coord_flip()
 plot_chart <- 
-  analysis_data$employed_by_puma %>% 
+  analysis_data$employed_by_puma_region %>% 
   filter(oy_flag == "connected_youth", 
          employment_label == 'Employed') %>% 
-  ggplot(aes(x = fct_reorder(PUMA, percent), y = percent, fill = PUMA_region)) + 
-  geom_col() + 
+  ggplot(aes(x = fct_reorder(PUMA_region, percent), y = percent, fill = PUMA_region)) + 
+  geom_col(width = .7) + 
   geom_errorbar(aes(ymin = !!error_bar_low, ymax = percent_upp), 
                 width = .2) +
   geom_label(aes(label = scales::percent(percent, suffix = "", accuracy = .1)), 
@@ -766,14 +766,16 @@ plot_chart <-
   theme_classic() + 
   scale_y_continuous(labels = scales::percent) + 
   labs(y = "Percent", 
-       x = "PUMA", 
+       x = "Chicago Region", 
        fill = "Chicago Region", 
-       title = "Connected Youth employment by PUMA") + 
+       title = "Connected Youth employment by Chicago Region") + 
   theme(
-    legend.position = 'bottom'
+    legend.position = 'none'
+    # axis.text.x = element_blank(), 
+    # axis.title.x = element_blank(), 
+    # axis.ticks.x = element_blank()
   ) +
-  ggsci::scale_fill_uchicago() + 
-  coord_flip()
+  ggsci::scale_fill_uchicago() 
 
 
 cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/5, 4/4), rel_widths = c(2/5,3/5))
@@ -788,11 +790,11 @@ cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/5
 ```{r, fig.height = 5, fig.width = 10}
 
 plot_chart <- 
-  analysis_data$school_youth_attendance_by_puma %>% 
+  analysis_data$school_youth_attendance_by_puma_region %>% 
   filter(oy_flag == "connected_youth", 
          school_label == "Attending School") %>% 
-  ggplot(aes(x = fct_reorder(PUMA, percent), y = percent, fill = PUMA_region)) + 
-  geom_col() + 
+  ggplot(aes(x = fct_reorder(PUMA_region, percent), y = percent, fill = PUMA_region)) + 
+  geom_col(width = .7) + 
   geom_errorbar(aes(ymin = !!error_bar_low, ymax = percent_upp), 
                 width = .2) + 
   geom_label(aes(label = scales::percent(percent, accuracy = .1, suffix = "")), 
@@ -802,14 +804,18 @@ plot_chart <-
   theme_classic() + 
   scale_y_continuous(labels = scales::percent, limits = c(0,1)) + 
   labs(y = "Percent", 
-       x = "PUMA", 
+       x = "Chicago Region", 
        fill = "Chicago Region", 
-       title = "Connected Youth school enrollment by PUMA") + 
+       title = "Connected Youth school enrollment by Chicago Region") + 
   theme(
-    legend.position = 'bottom'
+    legend.position = 'none'
+    # axis.title.x = element_blank(), 
+    # axis.ticks.x = element_blank(), 
+    # axis.text.x = element_blank()
   ) +
-  ggsci::scale_fill_uchicago() + 
-  coord_flip()
+  ggsci::scale_fill_uchicago() 
+
+
 
 cowplot::plot_grid(puma_reference_map, plot_chart, ncol = 2, rel_heights = c(1/4, 3/4), rel_widths = c(2/5,3/5))
 
